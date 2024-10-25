@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Конструктор визиток</title>
+    <!-- Подключение Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Подключение пользовательских стилей -->
+    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
+    <!-- Подключение Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+</head>
+<body>
+    <div class="container my-5">
+        <h1 class="text-center mb-4">Конструктор визиток</h1>
+        <div class="row">
+            <!-- Левая колонка с формой -->
+            <div class="col-md-6">
+                <!-- Форма -->
+                <form id="card-form">
+                    <!-- Порядок полей -->
+                    <div class="mb-3">
+                        <label class="form-label">Порядок полей</label>
+                        <ul id="field-order" class="list-group">
+                            <li class="list-group-item" data-field="organization">
+                                <i class="bi bi-grip-vertical"></i> Наименование организации
+                            </li>
+                            <li class="list-group-item" data-field="fullName">
+                                <i class="bi bi-grip-vertical"></i> Фамилия, имя, отчество
+                            </li>
+                            <li class="list-group-item" data-field="position">
+                                <i class="bi bi-grip-vertical"></i> Должность
+                            </li>
+                            <li class="list-group-item" data-field="contactInfo">
+                                <i class="bi bi-grip-vertical"></i> Контактная информация
+                            </li>
+                        </ul>
+                        <small class="form-text text-muted">Перетащите поля, чтобы изменить их порядок на визитке.</small>
+                    </div>
+
+                    <!-- Остальные поля формы -->
+                    <!-- Наименование организации -->
+                    <div class="mb-3">
+                        <label for="organization" class="form-label">Наименование организации</label>
+                        <input type="text" class="form-control" id="organization" placeholder="ООО &quot;Пример&quot;">
+                    </div>
+                    <!-- ФИО -->
+                    <div class="mb-3">
+                        <label for="fullName" class="form-label">Фамилия, имя, отчество</label>
+                        <input type="text" class="form-control" id="fullName" placeholder="Иванов Иван Иванович">
+                    </div>
+                    <!-- Должность -->
+                    <div class="mb-3">
+                        <label for="position" class="form-label">Должность</label>
+                        <input type="text" class="form-control" id="position" placeholder="Менеджер">
+                    </div>
+                    <!-- Телефон -->
+                    <div id="phone-container" class="mb-3">
+                        <label class="form-label">Телефон</label>
+                        <div class="input-group mb-2">
+                            <input type="text" class="form-control phone-input" placeholder="+7 (999) 123-45-67">
+                            <button class="btn btn-outline-secondary add-phone" type="button"><i class="bi bi-plus"></i></button>
+                        </div>
+                    </div>
+                    <!-- E-mail -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="showEmail">
+                            <label class="form-check-label" for="showEmail">Отображать E-mail</label>
+                        </div>
+                        <div id="email-container" class="mt-2" style="display: none;">
+                            <input type="email" class="form-control" id="email" placeholder="E-mail">
+                        </div>
+                    </div>
+                    <!-- Адрес -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="showAddress">
+                            <label class="form-check-label" for="showAddress">Отображать адрес</label>
+                        </div>
+                        <div id="address-container" class="mt-2" style="display: none;">
+                            <input type="text" class="form-control" id="address" placeholder="Адрес">
+                        </div>
+                    </div>
+                    <!-- Выбор размера визитки -->
+                    <div class="mb-3">
+                        <label class="form-label">Размер визитки</label>
+                        <select class="form-select" id="card-size">
+                            <option value="350x200" selected>Стандартный (350x200px)</option>
+                            <option value="400x225">Широкий (400x225px)</option>
+                            <option value="300x170">Компактный (300x170px)</option>
+                        </select>
+                    </div>
+                    <!-- Выбор выравнивания текста -->
+                    <div class="mb-3">
+                        <label class="form-label">Выравнивание текста</label>
+                        <div class="btn-group" role="group" aria-label="Text alignment">
+                            <input type="radio" class="btn-check" name="textAlign" id="alignLeft" value="left" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="alignLeft"><i class="bi bi-text-left"></i></label>
+
+                            <input type="radio" class="btn-check" name="textAlign" id="alignCenter" value="center" autocomplete="off" checked>
+                            <label class="btn btn-outline-primary" for="alignCenter"><i class="bi bi-text-center"></i></label>
+
+                            <input type="radio" class="btn-check" name="textAlign" id="alignRight" value="right" autocomplete="off">
+                            <label class="btn btn-outline-primary" for="alignRight"><i class="bi bi-text-right"></i></label>
+                        </div>
+                    </div>
+                    <!-- Выбор размера шрифта -->
+                    <div class="mb-3">
+                        <label class="form-label">Размер шрифта</label>
+                        <input type="range" class="form-range" min="12" max="30" value="18" id="fontSize">
+                    </div>
+                    <!-- Выбор цвета фона -->
+                    <div class="mb-3">
+                        <label class="form-label">Цвет фона визитки</label>
+                        <input type="color" class="form-control form-control-color" id="backgroundColor" value="#ffffff" title="Выберите цвет фона">
+                    </div>
+                    <!-- Выбор закругления краев -->
+                    <div class="mb-3">
+                        <label class="form-label">Закругление краёв</label>
+                        <input type="range" class="form-range" min="0" max="50" value="10" id="borderRadius">
+                    </div>
+                    <!-- Загрузка логотипа -->
+                    <div class="mb-3">
+                        <label class="form-label">Добавить логотип</label>
+                        <input type="file" class="form-control" id="logoUpload" accept=".png, .svg">
+                    </div>
+                    <!-- Размещение логотипа -->
+                    <div class="mb-3">
+                        <label class="form-label">Размещение логотипа</label>
+                        <select class="form-select" id="logoPlacement">
+                            <option value="front">На лицевой стороне</option>
+                            <option value="back">На обратной стороне</option>
+                        </select>
+                    </div>
+                    <!-- Позиция логотипа на лицевой стороне -->
+                    <div class="mb-3" id="logo-position-container">
+                        <label class="form-label">Позиция логотипа</label>
+                        <select class="form-select" id="logoPosition">
+                            <option value="top-left">Сверху слева</option>
+                            <option value="top-right">Сверху справа</option>
+                            <option value="bottom-left">Снизу слева</option>
+                            <option value="bottom-right">Снизу справа</option>
+                        </select>
+                    </div>
+                    <!-- Размер логотипа на обратной стороне -->
+                    <div class="mb-3" id="logo-size-container" style="display: none;">
+                        <label class="form-label">Размер логотипа на обратной стороне</label>
+                        <input type="range" class="form-range" min="50" max="200" value="100" id="logoSize">
+                    </div>
+                    <!-- Кнопка скачать PDF -->
+                    <button type="button" class="btn btn-success" id="download-pdf">Скачать PDF</button>
+                </form>
+            </div>
+            <!-- Правая колонка с превью визитки -->
+            <div class="col-md-6">
+                <h2 class="text-center">Превью визитки</h2>
+                <!-- Превью лицевой стороны -->
+                <div id="card-preview-front" class="card-preview mt-4">
+                    <!-- Лицевая сторона -->
+                </div>
+                <!-- Превью обратной стороны -->
+                <h2 class="text-center mt-4">Обратная сторона</h2>
+                <div id="card-preview-back" class="card-preview mt-4">
+                    <!-- Обратная сторона -->
+                </div>
+                <!-- Блок для отображения предупреждений -->
+                <div id="warning-message" class="mt-2 text-danger"></div>
+            </div>
+        </div>
+    </div>
+    <!-- Подключение Bootstrap JS и зависимостей -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Подключение пользовательских скриптов -->
+    <script src="{{ url_for('static', path='script.js') }}"></script>
+    <!-- Подключение html2canvas и jsPDF -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- Подключение Sortable.js для изменения порядка полей -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+</body>
+</html>

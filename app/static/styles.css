@@ -1,0 +1,115 @@
+body {
+    background-color: #f8f9fa;
+    font-family: 'Roboto', sans-serif;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.card-preview {
+    position: relative;
+    background-size: cover;
+    background-position: center;
+    border: 1px solid #ccc;
+    padding: 20px;
+    color: #202020;
+    overflow: hidden;
+    background-color: #ffffff; /* Цвет фона по умолчанию */
+    border-radius: 10px; /* Закругление краёв по умолчанию */
+    display: inline-block;
+    margin: 10px;
+    vertical-align: top;
+}
+
+.card-preview .organization {
+    font-size: 16px;
+    margin-top: 10px;
+}
+
+.card-preview .fullName {
+    font-size: 24px;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+.card-preview .position {
+    font-size: 14px;
+    margin-top: 5px;
+}
+
+.card-preview .contact-info-container {
+    margin-top: 10px;
+    font-size: 12px;
+    word-wrap: break-word;
+}
+
+.card-preview .contact-info-container div {
+    margin-top: 2px;
+}
+
+.card-preview .logo {
+    position: absolute;
+    max-width: 80px;
+    max-height: 80px;
+}
+
+.card-preview .logo-back {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.bg-thumbnail {
+    width: 60px;
+    height: 40px;
+    object-fit: cover;
+    border: 1px solid #ccc;
+}
+
+/* Стили для превью обратной стороны */
+#card-preview-back {
+    display: inline-block; /* Отображаем по умолчанию */
+}
+
+#warning-message {
+    color: red;
+    font-weight: bold;
+}
+
+/* Стилизация бегунков */
+input[type=range] {
+    accent-color: gray;
+}
+
+input[type=range]::-webkit-slider-thumb {
+    background: gray;
+}
+
+input[type=range]::-webkit-slider-runnable-track {
+    background: #e0e0e0;
+}
+
+input[type=range]::-moz-range-thumb {
+    background: gray;
+}
+
+input[type=range]::-moz-range-track {
+    background: #e0e0e0;
+}
+
+/* Центрирование заголовка и превью */
+.text-center {
+    text-align: center;
+}
+
+.preview-container {
+    text-align: center;
+}
+
+.card-preview {
+    display: inline-block;
+    margin: 10px;
+}
