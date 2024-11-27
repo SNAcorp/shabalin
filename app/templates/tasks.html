@@ -5,53 +5,82 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список задач</title>
     <style>
+        :root {
+            --primary-color: #4285f4;
+            --text-primary: #2c3e50;
+            --text-secondary: #636e72;
+            --background-main: #f8f9fa;
+            --background-card: #ffffff;
+            --border-color: #e9ecef;
+            --shadow-sm: 0 2px 4px rgba(0, 0, 0, 0.1);
+            --shadow-md: 0 4px 6px rgba(0, 0, 0, 0.1);
+            --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.1);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --spacing-xs: 4px;
+            --spacing-sm: 8px;
+            --spacing-md: 16px;
+            --spacing-lg: 24px;
+            --container-width: 800px;
+        }
+
         * {
-            box-sizing: border-box;
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
         }
 
         body {
-            background: #f5f5f5;
-            padding: 20px;
+            background-color: var(--background-main);
+            color: var(--text-primary);
+            line-height: 1.5;
             min-height: 100vh;
+            padding: var(--spacing-lg);
+            position: relative;
         }
 
         .container {
-            max-width: 800px;
+            max-width: var(--container-width);
             margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            padding: 20px;
+            background-color: var(--background-card);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-sm);
+            padding: var(--spacing-lg);
         }
 
         .header {
             display: flex;
             justify-content: space-between;
             align-items: center;
-            margin-bottom: 20px;
-            flex-wrap: wrap;
-            gap: 10px;
+            margin-bottom: var(--spacing-lg);
+            padding-bottom: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
         }
 
         .header h1 {
-            font-size: 24px;
-            color: #333;
-            font-weight: normal;
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--text-primary);
         }
 
         .add-btn {
-            background: none;
-            border: none;
-            font-size: 16px;
-            color: #666;
-            cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            padding: 8px;
+            gap: var(--spacing-xs);
+            padding: var(--spacing-sm) var(--spacing-md);
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+
+        .add-btn:hover {
+            background-color: #3367d6;
         }
 
         .todo-list {
@@ -61,135 +90,71 @@
         .todo-item {
             display: flex;
             align-items: flex-start;
-            padding: 10px 0;
-            border-bottom: 1px solid #eee;
-            flex-wrap: wrap;
+            padding: var(--spacing-md);
+            border-bottom: 1px solid var(--border-color);
+            transition: background-color 0.2s ease;
+        }
+
+        .todo-item:hover {
+            background-color: var(--background-main);
         }
 
         .todo-item.completed {
-            opacity: 0.6;
-        }
-
-        .todo-item.completed .todo-text {
-            text-decoration: line-through;
-            color: #999;
+            opacity: 0.7;
         }
 
         .todo-checkbox {
-            width: 20px;
-            height: 20px;
-            margin-right: 10px;
+            width: 18px;
+            height: 18px;
+            margin-right: var(--spacing-sm);
             margin-top: 3px;
+            cursor: pointer;
+        }
+
+        .todo-content {
+            flex: 1;
+            min-width: 0;
+            margin-right: var(--spacing-md);
         }
 
         .todo-text {
-            flex: 1 1 auto;
-            font-size: 16px;
-            color: #333;
-            word-break: break-word;
-            min-width: 0;
-            padding-right: 10px;
+            font-size: 1rem;
+            color: var(--text-primary);
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+
+        .completed .todo-text {
+            text-decoration: line-through;
+            color: var(--text-secondary);
         }
 
         .priority-icon {
-            color: #ff4444;
-            margin-right: 10px;
-            flex-shrink: 0;
+            display: inline-flex;
+            align-items: center;
+            color: #f39c12;
+            margin-right: var(--spacing-xs);
         }
 
         .todo-actions {
             display: flex;
-            gap: 10px;
-            margin-left: auto;
-            flex-shrink: 0;
+            gap: var(--spacing-sm);
         }
 
-        .todo-actions button {
+        .action-btn {
             background: none;
             border: none;
+            padding: var(--spacing-xs);
             cursor: pointer;
             opacity: 0.6;
-            padding: 4px;
+            transition: opacity 0.2s ease;
         }
 
-        .todo-actions button:hover {
+        .action-btn:hover {
             opacity: 1;
         }
 
-        .task-card {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            width: 90%;
-            max-width: 400px;
-            max-height: 90vh;
-            overflow-y: auto;
-            display: none;
-            margin: 20px;
-        }
-
-        .task-card.active {
-            display: block;
-        }
-
-        .task-card h2 {
-            font-size: 18px;
-            margin-bottom: 15px;
-            color: #333;
-            font-weight: normal;
-        }
-
-        .task-input {
-            width: 100%;
-            padding: 8px;
-            margin-bottom: 15px;
-            border: 1px solid #ddd;
-            border-radius: 4px;
-            font-size: 14px;
-            resize: vertical;
-            min-height: 60px;
-            max-height: 200px;
-        }
-
-        .priority-checkbox {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 20px;
-        }
-
-        .card-actions {
-            display: flex;
-            gap: 10px;
-            flex-wrap: wrap;
-        }
-
-        .btn {
-            padding: 8px 16px;
-            border-radius: 4px;
-            border: none;
-            cursor: pointer;
-            font-size: 14px;
-            flex: 1;
-            min-width: 120px;
-        }
-
-        .btn-primary {
-            background: #4285f4;
-            color: white;
-        }
-
-        .btn-secondary {
-            background: #f5f5f5;
-            color: #333;
-        }
-
-        .overlay {
+        #overlay {
             position: fixed;
             top: 0;
             left: 0;
@@ -197,36 +162,146 @@
             bottom: 0;
             background: rgba(0, 0, 0, 0.5);
             display: none;
+            z-index: 1000;
         }
 
-        .overlay.active {
+        #overlay.active {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #taskCard {
+            background: white;
+            padding: var(--spacing-lg);
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            width: 90%;
+            max-width: 480px;
+            display: none;
+        }
+
+        #taskCard.active {
             display: block;
         }
 
-        @media (max-width: 480px) {
+        #taskCard h2 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: var(--spacing-lg);
+            color: var(--text-primary);
+        }
+
+        .task-input {
+            width: 100%;
+            min-height: 60px;
+            max-height: 400px;
+            padding: var(--spacing-md);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            font-size: 1rem;
+            line-height: 1.5;
+            resize: none;
+            margin-bottom: var(--spacing-md);
+            overflow-y: auto;
+        }
+
+        .task-input:focus {
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 2px rgba(66, 133, 244, 0.1);
+        }
+
+        .priority-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--spacing-sm);
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .priority-checkbox label {
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: var(--spacing-md);
+        }
+
+        .btn {
+            flex: 1;
+            padding: var(--spacing-sm) var(--spacing-md);
+            border: none;
+            border-radius: var(--radius-sm);
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: #3367d6;
+        }
+
+        .btn-secondary {
+            background-color: var(--background-main);
+            color: var(--text-secondary);
+        }
+
+        .btn-secondary:hover {
+            background-color: var(--border-color);
+        }
+
+        @media (max-width: 640px) {
             body {
-                padding: 10px;
+                padding: var(--spacing-sm);
             }
 
             .container {
-                padding: 15px;
+                padding: var(--spacing-md);
             }
 
             .header {
                 flex-direction: column;
                 align-items: stretch;
+                gap: var(--spacing-sm);
             }
 
             .add-btn {
+                width: 100%;
                 justify-content: center;
             }
 
             .todo-item {
-                padding: 15px 0;
+                flex-wrap: wrap;
+                gap: var(--spacing-sm);
             }
 
-            .task-card {
-                width: calc(100% - 40px);
+            .todo-actions {
+                width: 100%;
+                justify-content: flex-end;
+                margin-top: var(--spacing-sm);
+            }
+
+            #taskCard {
+                width: calc(100% - 32px);
+                margin: 16px;
+                padding: var(--spacing-md);
+            }
+
+            .card-actions {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
             }
         }
     </style>
@@ -237,79 +312,147 @@
             <h1>Список задач</h1>
             <button class="add-btn" onclick="showTaskCard()">
                 <span>+</span>
-                Добавить
+                Добавить задачу
             </button>
         </div>
         <ul class="todo-list" id="todoList"></ul>
     </div>
 
-    <div class="overlay" id="overlay"></div>
-
-    <div class="task-card" id="taskCard">
-        <h2>Карточка задачи</h2>
-        <textarea class="task-input" id="taskInput" placeholder="Описание задачи"></textarea>
-        <div class="priority-checkbox">
-            <input type="checkbox" id="priorityCheck">
-            <label for="priorityCheck">Высокий приоритет ⚡</label>
-        </div>
-        <div class="card-actions">
-            <button class="btn btn-primary" onclick="saveTask()">Сохранить</button>
-            <button class="btn btn-secondary" onclick="hideTaskCard()">Отменить</button>
+    <div id="overlay" class="overlay">
+        <div id="taskCard" class="task-card">
+            <div class="task-card-content">
+                <h2>Карточка задачи</h2>
+                <textarea
+                    class="task-input"
+                    id="taskInput"
+                    placeholder="Введите описание задачи..."
+                ></textarea>
+                <div class="priority-checkbox">
+                    <input type="checkbox" id="priorityCheck">
+                    <label for="priorityCheck">Высокий приоритет ⚡</label>
+                </div>
+                <div class="card-actions">
+                    <button class="btn btn-primary" onclick="saveTask()">Сохранить</button>
+                    <button class="btn btn-secondary" onclick="hideTaskCard()">Отмена</button>
+                </div>
+            </div>
         </div>
     </div>
 
     <script>
-        let tasks = [
-            { id: 1, text: 'Задача 1', completed: false, priority: true },
-            { id: 2, text: 'Задача 2', completed: true, priority: true },
-            { id: 4, text: 'Задача 4', completed: false, priority: false },
-            { id: 8, text: 'Задача 8', completed: true, priority: false },
-            { id: 9, text: 'Задача 9', completed: true, priority: false },
-            { id: 10, text: 'Задача 10', completed: false, priority: true }
-        ];
-
+        let tasks = [];
         let editingTaskId = null;
 
+        // Загрузка задач из куки при загрузке страницы
+        function loadTasksFromCookies() {
+            const tasksJson = getCookie('tasks');
+            if (tasksJson) {
+                try {
+                    tasks = JSON.parse(tasksJson);
+                    renderTasks();
+                } catch (e) {
+                    console.error('Ошибка при парсинге задач из куки:', e);
+                    tasks = [];
+                }
+            }
+        }
+
+        // Сохранение задач в куки
+        function saveTasksToCookies() {
+            const tasksJson = JSON.stringify(tasks);
+            setCookie('tasks', tasksJson, 365);
+        }
+
+        // Утилиты для работы с куки
+        function setCookie(name, value, days) {
+            const date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            const expires = "expires=" + date.toUTCString();
+            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+        }
+
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for (let i = 0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) {
+                    return decodeURIComponent(c.substring(nameEQ.length, c.length));
+                }
+            }
+            return null;
+        }
+
+        // Отрисовка задач
         function renderTasks() {
             const todoList = document.getElementById('todoList');
             todoList.innerHTML = '';
 
-            tasks.forEach(task => {
+            const sortedTasks = [...tasks].sort((a, b) => {
+                if (a.completed !== b.completed) {
+                    return a.completed ? 1 : -1;
+                }
+                if (a.priority !== b.priority) {
+                    return b.priority ? 1 : -1;
+                }
+                return 0;
+            });
+
+            sortedTasks.forEach(task => {
                 const li = document.createElement('li');
                 li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+                li.setAttribute('data-task-id', task.id);
 
                 li.innerHTML = `
                     <input type="checkbox" class="todo-checkbox" ${task.completed ? 'checked' : ''}
                            onclick="toggleTask(${task.id})">
-                    ${task.priority ? '<span class="priority-icon">⚡</span>' : ''}
-                    <span class="todo-text">${task.text}</span>
+                    <div class="todo-content">
+                        ${task.priority ? '<span class="priority-icon">⚡</span>' : ''}
+                        <span class="todo-text">${task.text}</span>
+                    </div>
                     <div class="todo-actions">
-                        <button onclick="editTask(${task.id})">✏️</button>
-                        <button onclick="deleteTask(${task.id})">🗑️</button>
+                        <button class="action-btn" onclick="editTask(${task.id})" title="Редактировать">✏️</button>
+                        <button class="action-btn" onclick="deleteTask(${task.id})" title="Удалить">🗑️</button>
                     </div>
                 `;
 
                 todoList.appendChild(li);
             });
+
+            saveTasksToCookies();
         }
 
+        // Показ карточки задачи
         function showTaskCard(isEdit = false) {
-            document.getElementById('overlay').classList.add('active');
-            document.getElementById('taskCard').classList.add('active');
+            const overlay = document.getElementById('overlay');
+            const taskCard = document.getElementById('taskCard');
+
+            overlay.classList.add('active');
+            taskCard.classList.add('active');
 
             if (!isEdit) {
                 document.getElementById('taskInput').value = '';
                 document.getElementById('priorityCheck').checked = false;
                 editingTaskId = null;
             }
+
+            setTimeout(() => {
+                document.getElementById('taskInput').focus();
+            }, 100);
         }
 
+        // Скрытие карточки задачи
         function hideTaskCard() {
-            document.getElementById('overlay').classList.remove('active');
-            document.getElementById('taskCard').classList.remove('active');
+            const overlay = document.getElementById('overlay');
+            const taskCard = document.getElementById('taskCard');
+
+            overlay.classList.remove('active');
+            taskCard.classList.remove('active');
             editingTaskId = null;
         }
 
+        // Сохранение задачи
         function saveTask() {
             const text = document.getElementById('taskInput').value.trim();
             const priority = document.getElementById('priorityCheck').checked;
@@ -317,25 +460,45 @@
             if (!text) return;
 
             if (editingTaskId === null) {
-                const newId = Math.max(...tasks.map(t => t.id), 0) + 1;
-                tasks.push({
+                const newId = Math.max(...tasks.map(t => t.id).concat([0])) + 1;
+                const newTask = {
                     id: newId,
                     text,
                     completed: false,
                     priority
-                });
+                };
+
+                tasks.push(newTask);
+                addTaskWithAnimation(newTask);
             } else {
                 const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
                 if (taskIndex !== -1) {
                     tasks[taskIndex].text = text;
                     tasks[taskIndex].priority = priority;
+                    renderTasks();
                 }
             }
 
-            renderTasks();
             hideTaskCard();
         }
 
+        // Анимация добавления новой задачи
+        function addTaskWithAnimation(task) {
+            renderTasks();
+            const newTaskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+            if (newTaskElement) {
+                newTaskElement.style.opacity = '0';
+                newTaskElement.style.transform = 'translateY(-20px)';
+
+                requestAnimationFrame(() => {
+                    newTaskElement.style.transition = 'all 0.3s ease';
+                    newTaskElement.style.opacity = '1';
+                    newTaskElement.style.transform = 'translateY(0)';
+                });
+            }
+        }
+
+        // Редактирование задачи
         function editTask(id) {
             const task = tasks.find(t => t.id === id);
             if (task) {
@@ -346,24 +509,122 @@
             }
         }
 
+        // Удаление задачи
         function deleteTask(id) {
-            tasks = tasks.filter(t => t.id !== id);
-            renderTasks();
-        }
+            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+                const taskElement = document.querySelector(`[data-task-id="${id}"]`);
+                if (taskElement) {
+                    taskElement.style.transition = 'all 0.3s ease';
+                    taskElement.style.opacity = '0';
+                    taskElement.style.transform = 'translateX(20px)';
 
-        function toggleTask(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                task.completed = !task.completed;
-                renderTasks();
+                    setTimeout(() => {
+                        tasks = tasks.filter(t => t.id !== id);
+                        renderTasks();
+                    }, 300);
+                }
             }
         }
 
-        // Initial render
-        renderTasks();
+        // Переключение статуса задачи
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                const taskElement = document.querySelector(`[data-task-id="${id}"]`);
+                if (taskElement) {
+                    taskElement.style.transition = 'all 0.3s ease';
+                    taskElement.style.opacity = '0.5';
+                    taskElement.style.transform = 'scale(0.98)';
 
-        // Close card when clicking overlay
+                    setTimeout(() => {
+                        task.completed = !task.completed;
+                        renderTasks();
+                    }, 300);
+                }
+            }
+        }
+
+        function autoResize(textarea) {
+            textarea.style.height = 'auto';
+            textarea.style.overflow = 'hidden';
+            const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 500);
+            textarea.style.height = newHeight + 'px';
+        }
+
+        // Предотвращение закрытия карточки при клике внутри
+        document.getElementById('taskCard').addEventListener('click', (e) => {
+            e.stopPropagation();
+        });
+
+        // Обработка клавиши Enter в textarea
+        document.getElementById('taskInput').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                saveTask();
+            }
+        });
+
+        // Обработка клавиши Escape для закрытия модального окна
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideTaskCard();
+            }
+        });
+
+        // Ограничение длины текста задачи
+        const taskInput = document.getElementById('taskInput');
+        const maxLength = 500;
+
+        taskInput.addEventListener('input', function() {
+            if (this.value.length > maxLength) {
+                this.value = this.value.substring(0, maxLength);
+            }
+        });
+
+        // Автосохранение при редактировании
+        let autosaveTimeout;
+        taskInput.addEventListener('input', function() {
+            clearTimeout(autosaveTimeout);
+            autosaveTimeout = setTimeout(() => {
+                const text = this.value.trim();
+                if (text && editingTaskId) {
+                    const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+                    if (taskIndex !== -1) {
+                        tasks[taskIndex].text = text;
+                        saveTasksToCookies();
+                    }
+                }
+            }, 1000);
+        });
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const taskInput = document.getElementById('taskInput');
+
+            // Auto-resize on input
+            taskInput.addEventListener('input', function() {
+                autoResize(this);
+
+                // Existing character limit logic
+                if (this.value.length > maxLength) {
+                    this.value = this.value.substring(0, maxLength);
+                }
+            });
+
+            // Auto-resize when showing the modal
+            const originalShowTaskCard = showTaskCard;
+            showTaskCard = function(isEdit = false) {
+                originalShowTaskCard(isEdit);
+                setTimeout(() => {
+                    autoResize(taskInput);
+                }, 0);
+            };
+        });
+
+        // Закрытие модального окна при клике на оверлей
         document.getElementById('overlay').addEventListener('click', hideTaskCard);
+
+        // Инициализация приложения
+        loadTasksFromCookies();
     </script>
 </body>
 </html>
