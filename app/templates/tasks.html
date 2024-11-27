@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Список задач</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+        }
+
+        body {
+            background: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .add-btn {
+            background: none;
+            border: none;
+            font-size: 16px;
+            color: #666;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .todo-list {
+            list-style: none;
+        }
+
+        .todo-item {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+
+        .todo-item.completed {
+            opacity: 0.6;
+        }
+
+        .todo-item.completed .todo-text {
+            text-decoration: line-through;
+            color: #999;
+        }
+
+        .todo-checkbox {
+            width: 20px;
+            height: 20px;
+            margin-right: 10px;
+        }
+
+        .todo-text {
+            flex-grow: 1;
+            font-size: 16px;
+            color: #333;
+        }
+
+        .priority-icon {
+            color: #ff4444;
+            margin-right: 10px;
+        }
+
+        .todo-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .todo-actions button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            opacity: 0.6;
+        }
+
+        .todo-actions button:hover {
+            opacity: 1;
+        }
+
+        .task-card {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            width: 400px;
+            display: none;
+        }
+
+        .task-card.active {
+            display: block;
+        }
+
+        .task-card h2 {
+            font-size: 18px;
+            margin-bottom: 15px;
+            color: #333;
+            font-weight: normal;
+        }
+
+        .task-input {
+            width: 100%;
+            padding: 8px;
+            margin-bottom: 15px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .priority-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .card-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: #4285f4;
+            color: white;
+        }
+
+        .btn-secondary {
+            background: #f5f5f5;
+            color: #333;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+        }
+
+        .overlay.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Список задач</h1>
+            <button class="add-btn" onclick="showTaskCard()">
+                <span>+</span>
+                Добавить
+            </button>
+        </div>
+        <ul class="todo-list" id="todoList"></ul>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+
+    <div class="task-card" id="taskCard">
+        <h2>Карточка задачи</h2>
+        <input type="text" class="task-input" id="taskInput" placeholder="Описание задачи">
+        <div class="priority-checkbox">
+            <input type="checkbox" id="priorityCheck">
+            <label for="priorityCheck">Высокий приоритет ⚡</label>
+        </div>
+        <div class="card-actions">
+            <button class="btn btn-primary" onclick="saveTask()">Сохранить</button>
+            <button class="btn btn-secondary" onclick="hideTaskCard()">Отменить</button>
+        </div>
+    </div>
+
+    <script>
+        let tasks = [
+            { id: 1, text: 'Задача 1', completed: false, priority: true },
+            { id: 2, text: 'Задача 2', completed: true, priority: true },
+            { id: 4, text: 'Задача 4', completed: false, priority: false },
+            { id: 8, text: 'Задача 8', completed: true, priority: false },
+            { id: 9, text: 'Задача 9', completed: true, priority: false },
+            { id: 10, text: 'Задача 10', completed: false, priority: true }
+        ];
+
+        let editingTaskId = null;
+
+        function renderTasks() {
+            const todoList = document.getElementById('todoList');
+            todoList.innerHTML = '';
+
+            tasks.forEach(task => {
+                const li = document.createElement('li');
+                li.className = `todo-item ${task.completed ? 'completed' : ''}`;
+
+                li.innerHTML = `
+                    <input type="checkbox" class="todo-checkbox" ${task.completed ? 'checked' : ''}
+                           onclick="toggleTask(${task.id})">
+                    ${task.priority ? '<span class="priority-icon">⚡</span>' : ''}
+                    <span class="todo-text">${task.text}</span>
+                    <div class="todo-actions">
+                        <button onclick="editTask(${task.id})">✏️</button>
+                        <button onclick="deleteTask(${task.id})">🗑️</button>
+                    </div>
+                `;
+
+                todoList.appendChild(li);
+            });
+        }
+
+        function showTaskCard(isEdit = false) {
+            document.getElementById('overlay').classList.add('active');
+            document.getElementById('taskCard').classList.add('active');
+
+            if (!isEdit) {
+                document.getElementById('taskInput').value = '';
+                document.getElementById('priorityCheck').checked = false;
+                editingTaskId = null;
+            }
+        }
+
+        function hideTaskCard() {
+            document.getElementById('overlay').classList.remove('active');
+            document.getElementById('taskCard').classList.remove('active');
+            editingTaskId = null;
+        }
+
+        function saveTask() {
+            const text = document.getElementById('taskInput').value.trim();
+            const priority = document.getElementById('priorityCheck').checked;
+
+            if (!text) return;
+
+            if (editingTaskId === null) {
+                const newId = Math.max(...tasks.map(t => t.id), 0) + 1;
+                tasks.push({
+                    id: newId,
+                    text,
+                    completed: false,
+                    priority
+                });
+            } else {
+                const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+                if (taskIndex !== -1) {
+                    tasks[taskIndex].text = text;
+                    tasks[taskIndex].priority = priority;
+                }
+            }
+
+            renderTasks();
+            hideTaskCard();
+        }
+
+        function editTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                editingTaskId = id;
+                document.getElementById('taskInput').value = task.text;
+                document.getElementById('priorityCheck').checked = task.priority;
+                showTaskCard(true);
+            }
+        }
+
+        function deleteTask(id) {
+            tasks = tasks.filter(t => t.id !== id);
+            renderTasks();
+        }
+
+        function toggleTask(id) {
+            const task = tasks.find(t => t.id === id);
+            if (task) {
+                task.completed = !task.completed;
+                renderTasks();
+            }
+        }
+
+        // Initial render
+        renderTasks();
+
+        // Close card when clicking overlay
+        document.getElementById('overlay').addEventListener('click', hideTaskCard);
+    </script>
+</body>
+</html>

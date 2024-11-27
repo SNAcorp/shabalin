@@ -13,3 +13,9 @@ templates = Jinja2Templates(directory="app/templates")
 @app.get("/")
 async def read_index(request: Request):
     return templates.TemplateResponse("index.html", {"request": request})
+
+@app.get("/tasks")
+async def read_index(request: Request):
+    return templates.TemplateResponse("tasks.html", {"request": request})
+
+

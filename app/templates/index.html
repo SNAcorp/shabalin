@@ -3,12 +3,57 @@
 <head>
     <meta charset="UTF-8">
     <title>Конструктор визиток</title>
-    <!-- Подключение Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Подключение пользовательских стилей -->
-    <link rel="stylesheet" href="{{ url_for('static', path='styles.css') }}">
-    <!-- Подключение Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    <script src="https://unpkg.com/imask"></script>
+    <style>
+        .card-preview {
+            position: relative;
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin: 0 auto;
+            background-color: #ffffff;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .card-text {
+            margin: 5px 0;
+            word-wrap: break-word;
+        }
+
+        .card-logo {
+            max-height: 50px;
+            object-fit: contain;
+        }
+
+        .list-group-item {
+            cursor: move;
+        }
+
+        .bi-grip-vertical {
+            cursor: grab;
+            margin-right: 10px;
+        }
+
+        .overflow-warning {
+            color: red;
+            font-weight: bold;
+            margin-top: 10px;
+            display: none;
+        }
+
+        .center-position {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        .hidden {
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container my-5">
@@ -16,12 +61,11 @@
         <div class="row">
             <!-- Левая колонка с формой -->
             <div class="col-md-6">
-                <!-- Форма -->
-                <form id="card-form">
+                <form class="card-form">
                     <!-- Порядок полей -->
                     <div class="mb-3">
                         <label class="form-label">Порядок полей</label>
-                        <ul id="field-order" class="list-group">
+                        <ul class="field-order list-group">
                             <li class="list-group-item" data-field="organization">
                                 <i class="bi bi-grip-vertical"></i> Наименование организации
                             </li>
@@ -38,145 +82,514 @@
                         <small class="form-text text-muted">Перетащите поля, чтобы изменить их порядок на визитке.</small>
                     </div>
 
-                    <!-- Остальные поля формы -->
-                    <!-- Наименование организации -->
-                    <div class="mb-3">
-                        <label for="organization" class="form-label">Наименование организации</label>
-                        <input type="text" class="form-control" id="organization" placeholder="ООО &quot;Пример&quot;">
-                    </div>
-                    <!-- ФИО -->
-                    <div class="mb-3">
-                        <label for="fullName" class="form-label">Фамилия, имя, отчество</label>
-                        <input type="text" class="form-control" id="fullName" placeholder="Иванов Иван Иванович">
-                    </div>
-                    <!-- Должность -->
-                    <div class="mb-3">
-                        <label for="position" class="form-label">Должность</label>
-                        <input type="text" class="form-control" id="position" placeholder="Менеджер">
-                    </div>
-                    <!-- Телефон -->
-                    <div id="phone-container" class="mb-3">
-                        <label class="form-label">Телефон</label>
-                        <div class="input-group mb-2">
-                            <input type="text" class="form-control phone-input" placeholder="+7 (999) 123-45-67">
-                            <button class="btn btn-outline-secondary add-phone" type="button"><i class="bi bi-plus"></i></button>
+                    <!-- Основные поля -->
+                    <div class="form-fields">
+                        <!-- Организация -->
+                        <div class="mb-3">
+                            <label class="form-label">Наименование организации</label>
+                            <input type="text" class="form-control" data-field="organization" placeholder="ООО &quot;Пример&quot;">
+                            <div class="font-size-control-group mt-2">
+                                <label class="form-label">Размер шрифта</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2 font-size-control"
+                                           min="8" max="36" value="18"
+                                           data-target="organization">
+                                    <span class="font-size-value">18px</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ФИО -->
+                        <div class="mb-3">
+                            <label class="form-label">Фамилия, имя, отчество</label>
+                            <input type="text" class="form-control" data-field="fullName" placeholder="Иванов Иван Иванович">
+                            <div class="font-size-control-group mt-2">
+                                <label class="form-label">Размер шрифта</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2 font-size-control"
+                                           min="8" max="36" value="18"
+                                           data-target="fullName">
+                                    <span class="font-size-value">18px</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Должность -->
+                        <div class="mb-3">
+                            <label class="form-label">Должность</label>
+                            <input type="text" class="form-control" data-field="position" placeholder="Менеджер">
+                            <div class="font-size-control-group mt-2">
+                                <label class="form-label">Размер шрифта</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2 font-size-control"
+                                           min="8" max="36" value="18"
+                                           data-target="position">
+                                    <span class="font-size-value">18px</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <!-- E-mail -->
+
+                    <!-- Телефоны -->
+                    <div class="phone-container mb-3">
+                        <label class="form-label">Телефон</label>
+                        <div class="phone-inputs">
+                            <div class="input-group mb-2">
+                                <input type="text" class="form-control phone-input" placeholder="+7 (999) 123-45-67">
+                                <button class="btn btn-outline-secondary add-phone" type="button">
+                                    <i class="bi bi-plus"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="font-size-control-group mt-2">
+                            <label class="form-label">Размер шрифта</label>
+                            <div class="d-flex align-items-center">
+                                <input type="range" class="form-range me-2 font-size-control"
+                                       min="8" max="36" value="18"
+                                       data-target="phone">
+                                <span class="font-size-value">18px</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Email -->
                     <div class="mb-3">
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="showEmail">
-                            <label class="form-check-label" for="showEmail">Отображать E-mail</label>
+                            <input type="checkbox" class="form-check-input toggle-field" data-target="email">
+                            <label class="form-check-label">Отображать E-mail</label>
                         </div>
-                        <div id="email-container" class="mt-2" style="display: none;">
-                            <input type="email" class="form-control" id="email" placeholder="E-mail">
+                        <div class="field-container hidden">
+                            <input type="email" class="form-control" data-field="email" placeholder="E-mail">
+                            <div class="font-size-control-group mt-2">
+                                <label class="form-label">Размер шрифта</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2 font-size-control"
+                                           min="8" max="36" value="18"
+                                           data-target="email">
+                                    <span class="font-size-value">18px</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
+
                     <!-- Адрес -->
                     <div class="mb-3">
                         <div class="form-check">
-                            <input type="checkbox" class="form-check-input" id="showAddress">
-                            <label class="form-check-label" for="showAddress">Отображать адрес</label>
+                            <input type="checkbox" class="form-check-input toggle-field" data-target="address">
+                            <label class="form-check-label">Отображать адрес</label>
                         </div>
-                        <div id="address-container" class="mt-2" style="display: none;">
-                            <input type="text" class="form-control" id="address" placeholder="Адрес">
+                        <div class="field-container hidden">
+                            <input type="text" class="form-control" data-field="address" placeholder="Адрес">
+                            <div class="font-size-control-group mt-2">
+                                <label class="form-label">Размер шрифта</label>
+                                <div class="d-flex align-items-center">
+                                    <input type="range" class="form-range me-2 font-size-control"
+                                           min="8" max="36" value="18"
+                                           data-target="address">
+                                    <span class="font-size-value">18px</span>
+                                </div>
+                            </div>
                         </div>
                     </div>
-                    <!-- Выбор размера визитки -->
-                    <div class="mb-3">
-                        <label class="form-label">Размер визитки</label>
-                        <select class="form-select" id="card-size">
-                            <option value="350x200" selected>Стандартный (350x200px)</option>
-                            <option value="400x225">Широкий (400x225px)</option>
-                            <option value="300x170">Компактный (300x170px)</option>
-                        </select>
-                    </div>
-                    <!-- Выбор выравнивания текста -->
-                    <div class="mb-3">
-                        <label class="form-label">Выравнивание текста</label>
-                        <div class="btn-group" role="group" aria-label="Text alignment">
-                            <input type="radio" class="btn-check" name="textAlign" id="alignLeft" value="left" autocomplete="off">
-                            <label class="btn btn-outline-primary" for="alignLeft"><i class="bi bi-text-left"></i></label>
 
-                            <input type="radio" class="btn-check" name="textAlign" id="alignCenter" value="center" autocomplete="off" checked>
-                            <label class="btn btn-outline-primary" for="alignCenter"><i class="bi bi-text-center"></i></label>
-
-                            <input type="radio" class="btn-check" name="textAlign" id="alignRight" value="right" autocomplete="off">
-                            <label class="btn btn-outline-primary" for="alignRight"><i class="bi bi-text-right"></i></label>
+                    <!-- Настройки визитки -->
+                    <div class="card-settings">
+                        <div class="mb-3">
+                            <label class="form-label">Размер визитки</label>
+                            <select class="form-select card-size">
+                                <option value="350x200" selected>Стандартный (350x200px)</option>
+                                <option value="400x225">Широкий (400x225px)</option>
+                                <option value="300x170">Компактный (300x170px)</option>
+                            </select>
                         </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Выравнивание текста</label>
+                            <div class="btn-group" role="group">
+                                <input type="radio" class="btn-check text-align" name="textAlign" value="left">
+                                <label class="btn btn-outline-primary"><i class="bi bi-text-left"></i></label>
+
+                                <input type="radio" class="btn-check text-align" name="textAlign" value="center" checked>
+                                <label class="btn btn-outline-primary"><i class="bi bi-text-center"></i></label>
+
+                                <input type="radio" class="btn-check text-align" name="textAlign" value="right">
+                                <label class="btn btn-outline-primary"><i class="bi bi-text-right"></i></label>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Цвет фона визитки</label>
+                            <input type="color" class="form-control form-control-color background-color" value="#ffffff">
+                        </div>
+
+                        <div class="mb-3">
+                            <label class="form-label">Закругление краёв</label>
+                            <input type="range" class="form-range border-radius" min="0" max="50" value="10">
+                        </div>
+
+                        <!-- Логотип -->
+                        <div class="logo-section mb-3">
+                            <label class="form-label">Добавить логотип</label>
+                            <input type="file" class="form-control logo-upload" accept=".png, .svg">
+
+                            <div class="logo-settings hidden">
+                                <div class="mb-3">
+                                    <label class="form-label">Размещение логотипа</label>
+                                    <select class="form-select logo-placement">
+                                        <option value="front">На лицевой стороне</option>
+                                        <option value="back">На обратной стороне</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3 logo-position-container">
+                                    <label class="form-label">Позиция логотипа</label>
+                                    <select class="form-select logo-position">
+                                        <option value="top-left">Сверху слева</option>
+                                        <option value="top-right">Сверху справа</option>
+                                        <option value="center">По центру</option>
+                                        <option value="bottom-left">Снизу слева</option>
+                                        <option value="bottom-right">Снизу справа</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-3 logo-size-container">
+                                    <label class="form-label">Размер логотипа</label>
+                                    <input type="range" class="form-range logo-size" min="50" max="200" value="100">
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="button" class="btn btn-success download-pdf">Скачать PDF</button>
                     </div>
-                    <!-- Выбор размера шрифта -->
-                    <div class="mb-3">
-                        <label class="form-label">Размер шрифта</label>
-                        <input type="range" class="form-range" min="12" max="30" value="18" id="fontSize">
-                    </div>
-                    <!-- Выбор цвета фона -->
-                    <div class="mb-3">
-                        <label class="form-label">Цвет фона визитки</label>
-                        <input type="color" class="form-control form-control-color" id="backgroundColor" value="#ffffff" title="Выберите цвет фона">
-                    </div>
-                    <!-- Выбор закругления краев -->
-                    <div class="mb-3">
-                        <label class="form-label">Закругление краёв</label>
-                        <input type="range" class="form-range" min="0" max="50" value="10" id="borderRadius">
-                    </div>
-                    <!-- Загрузка логотипа -->
-                    <div class="mb-3">
-                        <label class="form-label">Добавить логотип</label>
-                        <input type="file" class="form-control" id="logoUpload" accept=".png, .svg">
-                    </div>
-                    <!-- Размещение логотипа -->
-                    <div class="mb-3">
-                        <label class="form-label">Размещение логотипа</label>
-                        <select class="form-select" id="logoPlacement">
-                            <option value="front">На лицевой стороне</option>
-                            <option value="back">На обратной стороне</option>
-                        </select>
-                    </div>
-                    <!-- Позиция логотипа на лицевой стороне -->
-                    <div class="mb-3" id="logo-position-container">
-                        <label class="form-label">Позиция логотипа</label>
-                        <select class="form-select" id="logoPosition">
-                            <option value="top-left">Сверху слева</option>
-                            <option value="top-right">Сверху справа</option>
-                            <option value="bottom-left">Снизу слева</option>
-                            <option value="bottom-right">Снизу справа</option>
-                        </select>
-                    </div>
-                    <!-- Размер логотипа на обратной стороне -->
-                    <div class="mb-3" id="logo-size-container" style="display: none;">
-                        <label class="form-label">Размер логотипа на обратной стороне</label>
-                        <input type="range" class="form-range" min="50" max="200" value="100" id="logoSize">
-                    </div>
-                    <!-- Кнопка скачать PDF -->
-                    <button type="button" class="btn btn-success" id="download-pdf">Скачать PDF</button>
                 </form>
             </div>
-            <!-- Правая колонка с превью визитки -->
+
+            <!-- Правая колонка с превью -->
             <div class="col-md-6">
                 <h2 class="text-center">Превью визитки</h2>
-                <!-- Превью лицевой стороны -->
-                <div id="card-preview-front" class="card-preview mt-4">
-                    <!-- Лицевая сторона -->
+                <div class="card-preview front mt-4">
+                    <div class="card-text" data-field="organization">ООО "Пример"</div>
+                    <div class="card-text" data-field="fullName">Иванов Иван Иванович</div>
+                    <div class="card-text" data-field="position">Менеджер</div>
+                    <div class="card-text" data-field="phone">+7 (999) 123-45-67</div>
+                    <div class="card-text hidden" data-field="email">E-mail</div>
+                    <div class="card-text hidden" data-field="address">Адрес</div>
                 </div>
-                <!-- Превью обратной стороны -->
                 <h2 class="text-center mt-4">Обратная сторона</h2>
-                <div id="card-preview-back" class="card-preview mt-4">
-                    <!-- Обратная сторона -->
-                </div>
-                <!-- Блок для отображения предупреждений -->
-                <div id="warning-message" class="mt-2 text-danger"></div>
+                <div class="card-preview back mt-4"></div>
+                <div class="warning-message mt-2 text-danger"></div>
             </div>
         </div>
+        <div class="overflow-warning">
+            Внимание! Контент выходит за пределы визитки
+        </div>
     </div>
-    <!-- Подключение Bootstrap JS и зависимостей -->
+
+    <!-- Скрипты -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Подключение пользовательских скриптов -->
-    <script src="{{ url_for('static', path='script.js') }}"></script>
-    <!-- Подключение html2canvas и jsPDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <!-- Подключение Sortable.js для изменения порядка полей -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.0/Sortable.min.js"></script>
+    <script>
+        class BusinessCardBuilder {
+    constructor() {
+        this.initializeComponents();
+        this.attachEventListeners();
+    }
+
+    initializeComponents() {
+        // Инициализация сортировки полей
+        new Sortable(document.querySelector('.field-order'), {
+            animation: 150,
+            handle: '.bi-grip-vertical',
+            onEnd: () => this.reorderPreviewElements()
+        });
+
+        // Инициализация масок для телефонов
+        this.initPhoneMasks();
+
+        // Инициализация начальных значений
+        this.updateCardSize();
+        this.updateBackgroundColor();
+        this.updateBorderRadius();
+        this.initFontSizeControllers();
+    }
+
+    attachEventListeners() {
+        // Обработчики для основных полей
+        document.querySelectorAll('.form-control[data-field]').forEach(input => {
+            input.addEventListener('input', () => {
+                this.updateFieldContent(input.dataset.field, input.value || input.placeholder);
+                this.checkOverflow();
+            });
+        });
+
+        // Обработчики для телефонов
+        document.querySelector('.add-phone').addEventListener('click', () => {
+            this.addPhoneField();
+        });
+
+        // Обработчики для переключателей полей
+        document.querySelectorAll('.toggle-field').forEach(toggle => {
+            toggle.addEventListener('change', (e) => {
+                this.toggleField(e.target.dataset.target, e.target.checked);
+            });
+        });
+
+        // Обработчики настроек карточки
+        this.attachCardSettingsListeners();
+
+        // Обработчики логотипа
+        this.attachLogoHandlers();
+
+        // Обработчик для генерации PDF
+        document.querySelector('.download-pdf').addEventListener('click', () => this.generatePDF());
+    }
+
+    initPhoneMasks() {
+        document.querySelectorAll('.phone-input').forEach(input => {
+            IMask(input, {
+                mask: '+{7} (000) 000-00-00'
+            });
+        });
+    }
+
+    addPhoneField() {
+        const phoneInputs = document.querySelector('.phone-inputs');
+        const newGroup = document.createElement('div');
+        newGroup.className = 'input-group mb-2';
+        newGroup.innerHTML = `
+            <input type="text" class="form-control phone-input" placeholder="+7 (___) ___-__-__">
+            <button class="btn btn-outline-danger remove-phone" type="button">
+                <i class="bi bi-trash"></i>
+            </button>
+        `;
+
+        phoneInputs.insertBefore(newGroup, phoneInputs.lastElementChild);
+
+        // Инициализация маски для нового поля
+        IMask(newGroup.querySelector('.phone-input'), {
+            mask: '+{7} (000) 000-00-00'
+        });
+
+        // Добавление обработчиков
+        newGroup.querySelector('.phone-input').addEventListener('input', () => {
+            this.updatePhonePreview();
+            this.checkOverflow();
+        });
+
+        newGroup.querySelector('.remove-phone').addEventListener('click', () => {
+            newGroup.remove();
+            this.updatePhonePreview();
+            this.checkOverflow();
+        });
+    }
+
+    updatePhonePreview() {
+        const phones = Array.from(document.querySelectorAll('.phone-input'))
+            .map(input => input.value)
+            .filter(value => value.trim() !== '' && value !== '+7 (___) ___-__-__');
+
+        const phonePreview = document.querySelector('.card-text[data-field="phone"]');
+        if (phonePreview) {
+            phonePreview.innerHTML = phones.join('<br>');
+        }
+    }
+
+    attachCardSettingsListeners() {
+        // Размер визитки
+        document.querySelector('.card-size').addEventListener('change', () => this.updateCardSize());
+
+        // Выравнивание текста
+        document.querySelectorAll('.text-align').forEach(radio => {
+            radio.addEventListener('change', (e) => this.updateTextAlignment(e.target.value));
+        });
+
+        // Цвет фона
+        document.querySelector('.background-color').addEventListener('input', () => this.updateBackgroundColor());
+
+        // Закругление краёв
+        document.querySelector('.border-radius').addEventListener('input', () => this.updateBorderRadius());
+    }
+
+    updateCardSize() {
+        const [width, height] = document.querySelector('.card-size').value.split('x').map(Number);
+        document.querySelectorAll('.card-preview').forEach(preview => {
+            preview.style.width = `${width}px`;
+            preview.style.height = `${height}px`;
+        });
+        this.checkOverflow();
+    }
+
+    updateTextAlignment(value) {
+        document.querySelectorAll('.card-preview').forEach(preview => {
+            preview.style.textAlign = value;
+        });
+    }
+
+    updateBackgroundColor() {
+        const color = document.querySelector('.background-color').value;
+        document.querySelectorAll('.card-preview').forEach(preview => {
+            preview.style.backgroundColor = color;
+        });
+    }
+
+    updateBorderRadius() {
+        const radius = document.querySelector('.border-radius').value;
+        document.querySelectorAll('.card-preview').forEach(preview => {
+            preview.style.borderRadius = `${radius}px`;
+        });
+    }
+
+    initFontSizeControllers() {
+        document.querySelectorAll('.font-size-control').forEach(slider => {
+            const valueDisplay = slider.parentElement.querySelector('.font-size-value');
+            slider.addEventListener('input', () => {
+                this.updateFontSize(slider.dataset.target, slider.value);
+                valueDisplay.textContent = `${slider.value}px`;
+                this.checkOverflow();
+            });
+        });
+    }
+
+    updateFontSize(field, size) {
+        const element = document.querySelector(`.card-text[data-field="${field}"]`);
+        if (element) {
+            element.style.fontSize = `${size}px`;
+        }
+    }
+
+    attachLogoHandlers() {
+        const logoUpload = document.querySelector('.logo-upload');
+        logoUpload.addEventListener('change', (e) => {
+            if (e.target.files[0]) {
+                this.handleLogoUpload(e.target.files[0]);
+            } else {
+                this.removeLogo();
+                document.querySelector('.logo-settings').classList.add('hidden');
+            }
+        });
+
+        ['logo-placement', 'logo-position', 'logo-size'].forEach(className => {
+            const element = document.querySelector(`.${className}`);
+            element?.addEventListener('change', () => this.updateLogoPosition());
+        });
+    }
+
+    handleLogoUpload(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            document.querySelector('.logo-settings').classList.remove('hidden');
+            this.updateLogo(e.target.result);
+        };
+        reader.readAsDataURL(file);
+    }
+
+    updateLogo(logoUrl) {
+        this.removeLogo();
+        const logo = document.createElement('img');
+        logo.src = logoUrl;
+        logo.className = 'card-logo';
+        this.updateLogoPosition(logo);
+    }
+
+    updateLogoPosition(logo = document.querySelector('.card-logo')) {
+        if (!logo) return;
+
+        const placement = document.querySelector('.logo-placement').value;
+        const position = document.querySelector('.logo-position').value;
+        const size = document.querySelector('.logo-size').value;
+
+        logo.style.maxWidth = `${size}px`;
+        logo.style.position = 'absolute';
+
+        const positions = {
+            'top-left': { top: '10px', left: '10px' },
+            'top-right': { top: '10px', right: '10px' },
+            'bottom-left': { bottom: '10px', left: '10px' },
+            'bottom-right': { bottom: '10px', right: '10px' },
+            'center': { top: '50%', left: '50%', transform: 'translate(-50%, -50%)' }
+        };
+
+        Object.assign(logo.style, positions[position]);
+
+        const targetPreview = document.querySelector(`.card-preview.${placement}`);
+        targetPreview.appendChild(logo);
+    }
+
+    removeLogo() {
+        document.querySelectorAll('.card-logo').forEach(logo => logo.remove());
+    }
+
+    toggleField(field, show) {
+        const container = document.querySelector(`.field-container[data-field="${field}"]`);
+        const preview = document.querySelector(`.card-text[data-field="${field}"]`);
+
+        if (container && preview) {
+            container.classList.toggle('hidden', !show);
+            preview.classList.toggle('hidden', !show);
+        }
+    }
+
+    reorderPreviewElements() {
+        const preview = document.querySelector('.card-preview.front');
+        document.querySelectorAll('.field-order .list-group-item').forEach(item => {
+            const field = item.dataset.field;
+            const element = document.querySelector(`.card-text[data-field="${field}"]`);
+            if (element) {
+                preview.appendChild(element);
+            }
+        });
+    }
+
+    checkOverflow() {
+        const preview = document.querySelector('.card-preview.front');
+        const warning = document.querySelector('.overflow-warning');
+
+        const isOverflowing = preview.scrollHeight > preview.clientHeight ||
+                             preview.scrollWidth > preview.clientWidth;
+
+        warning.style.display = isOverflowing ? 'block' : 'none';
+    }
+
+    async generatePDF() {
+        try {
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({
+                orientation: 'landscape',
+                unit: 'mm',
+                format: 'a8'
+            });
+
+            // Генерация лицевой стороны
+            const frontCanvas = await html2canvas(document.querySelector('.card-preview.front'), {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            doc.addImage(frontCanvas.toDataURL('image/png'), 'PNG', 0, 0, 85, 55);
+
+            // Генерация обратной стороны
+            const backCanvas = await html2canvas(document.querySelector('.card-preview.back'), {
+                scale: 2,
+                useCORS: true,
+                logging: false
+            });
+            doc.addPage();
+            doc.addImage(backCanvas.toDataURL('image/png'), 'PNG', 0, 0, 85, 55);
+
+            doc.save('business-card.pdf');
+        } catch (error) {
+            console.error('Ошибка при создании PDF:', error);
+            alert('Произошла ошибка при создании PDF. Пожалуйста, попробуйте еще раз.');
+        }
+    }
+}
+
+// Инициализация конструктора при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+    new BusinessCardBuilder();
+});
+    </script>
 </body>
 </html>
