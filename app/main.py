@@ -15,7 +15,7 @@ async def manifest():
     return {
         "name": "Todo List App",
         "short_name": "Todos",
-        "start_url": "/",
+        "start_url": "/tasks",
         "display": "standalone",
         "background_color": "#ffffff",
         "theme_color": "#4285f4",
