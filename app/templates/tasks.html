@@ -4,6 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Список задач</title>
+
+    <!-- PWA Meta Tags -->
+    <link rel="manifest" href="/manifest.json">
+    <meta name="theme-color" content="#4285f4">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black">
+    <meta name="apple-mobile-web-app-title" content="Список задач">
+    <link rel="apple-touch-icon" href="/static/icons/icon-192x192.png">
+
     <style>
         :root {
             --primary-color: #4285f4;
@@ -92,7 +101,7 @@
             align-items: flex-start;
             padding: var(--spacing-md);
             border-bottom: 1px solid var(--border-color);
-            transition: background-color 0.2s ease;
+            transition: all 0.3s ease;
         }
 
         .todo-item:hover {
@@ -343,45 +352,37 @@
         let tasks = [];
         let editingTaskId = null;
 
-        // Загрузка задач из куки при загрузке страницы
-        function loadTasksFromCookies() {
-            const tasksJson = getCookie('tasks');
+        // Регистрация Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/static/sw.js')
+                    .then(registration => {
+                        console.log('ServiceWorker registration successful');
+                    })
+                    .catch(err => {
+                        console.log('ServiceWorker registration failed: ', err);
+                    });
+            });
+        }
+
+        // Загрузка задач из LocalStorage
+        function loadTasksFromStorage() {
+            const tasksJson = localStorage.getItem('tasks');
             if (tasksJson) {
                 try {
                     tasks = JSON.parse(tasksJson);
                     renderTasks();
                 } catch (e) {
-                    console.error('Ошибка при парсинге задач из куки:', e);
+                    console.error('Ошибка при загрузке задач:', e);
                     tasks = [];
                 }
             }
         }
 
-        // Сохранение задач в куки
-        function saveTasksToCookies() {
+        // Сохранение задач в LocalStorage
+        function saveTasksToStorage() {
             const tasksJson = JSON.stringify(tasks);
-            setCookie('tasks', tasksJson, 365);
-        }
-
-        // Утилиты для работы с куки
-        function setCookie(name, value, days) {
-            const date = new Date();
-            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
-            const expires = "expires=" + date.toUTCString();
-            document.cookie = name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
-        }
-
-        function getCookie(name) {
-            const nameEQ = name + "=";
-            const ca = document.cookie.split(';');
-            for (let i = 0; i < ca.length; i++) {
-                let c = ca[i];
-                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
-                if (c.indexOf(nameEQ) === 0) {
-                    return decodeURIComponent(c.substring(nameEQ.length, c.length));
-                }
-            }
-            return null;
+            localStorage.setItem('tasks', tasksJson);
         }
 
         // Отрисовка задач
@@ -420,10 +421,9 @@
                 todoList.appendChild(li);
             });
 
-            saveTasksToCookies();
+            saveTasksToStorage();
         }
 
-        // Показ карточки задачи
         function showTaskCard(isEdit = false) {
             const overlay = document.getElementById('overlay');
             const taskCard = document.getElementById('taskCard');
@@ -442,7 +442,6 @@
             }, 100);
         }
 
-        // Скрытие карточки задачи
         function hideTaskCard() {
             const overlay = document.getElementById('overlay');
             const taskCard = document.getElementById('taskCard');
@@ -452,7 +451,6 @@
             editingTaskId = null;
         }
 
-        // Сохранение задачи
         function saveTask() {
             const text = document.getElementById('taskInput').value.trim();
             const priority = document.getElementById('priorityCheck').checked;
@@ -482,149 +480,176 @@
             hideTaskCard();
         }
 
-        // Анимация добавления новой задачи
         function addTaskWithAnimation(task) {
-            renderTasks();
-            const newTaskElement = document.querySelector(`[data-task-id="${task.id}"]`);
-            if (newTaskElement) {
-                newTaskElement.style.opacity = '0';
-                newTaskElement.style.transform = 'translateY(-20px)';
+    renderTasks();
+    const newTaskElement = document.querySelector(`[data-task-id="${task.id}"]`);
+    if (newTaskElement) {
+        newTaskElement.style.opacity = '0';
+        newTaskElement.style.transform = 'translateY(-20px)';
 
-                requestAnimationFrame(() => {
-                    newTaskElement.style.transition = 'all 0.3s ease';
-                    newTaskElement.style.opacity = '1';
-                    newTaskElement.style.transform = 'translateY(0)';
-                });
+        requestAnimationFrame(() => {
+            newTaskElement.style.transition = 'all 0.3s ease';
+            newTaskElement.style.opacity = '1';
+            newTaskElement.style.transform = 'translateY(0)';
+        });
+    }
+}
+
+function editTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+        editingTaskId = id;
+        document.getElementById('taskInput').value = task.text;
+        document.getElementById('priorityCheck').checked = task.priority;
+        showTaskCard(true);
+    }
+}
+
+function deleteTask(id) {
+    if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
+        const taskElement = document.querySelector(`[data-task-id="${id}"]`);
+        if (taskElement) {
+            taskElement.style.transition = 'all 0.3s ease';
+            taskElement.style.opacity = '0';
+            taskElement.style.transform = 'translateX(20px)';
+
+            setTimeout(() => {
+                tasks = tasks.filter(t => t.id !== id);
+                renderTasks();
+            }, 300);
+        }
+    }
+}
+
+function toggleTask(id) {
+    const task = tasks.find(t => t.id === id);
+    if (task) {
+        const taskElement = document.querySelector(`[data-task-id="${id}"]`);
+        if (taskElement) {
+            taskElement.style.transition = 'all 0.3s ease';
+            taskElement.style.opacity = '0.5';
+            taskElement.style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                task.completed = !task.completed;
+                renderTasks();
+            }, 300);
+        }
+    }
+}
+
+function autoResize(textarea) {
+    textarea.style.height = 'auto';
+    textarea.style.overflow = 'hidden';
+    const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 500);
+    textarea.style.height = newHeight + 'px';
+}
+
+// Event Listeners
+document.getElementById('taskCard').addEventListener('click', (e) => {
+    e.stopPropagation();
+});
+
+document.getElementById('taskInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        saveTask();
+    }
+});
+
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
+        hideTaskCard();
+    }
+});
+
+// Ограничение длины текста задачи
+const taskInput = document.getElementById('taskInput');
+const maxLength = 500;
+
+taskInput.addEventListener('input', function() {
+    if (this.value.length > maxLength) {
+        this.value = this.value.substring(0, maxLength);
+    }
+    // Вызываем autoResize при каждом вводе
+    autoResize(this);
+});
+
+// Автосохранение при редактировании
+let autosaveTimeout;
+taskInput.addEventListener('input', function() {
+    clearTimeout(autosaveTimeout);
+    autosaveTimeout = setTimeout(() => {
+        const text = this.value.trim();
+        if (text && editingTaskId) {
+            const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
+            if (taskIndex !== -1) {
+                tasks[taskIndex].text = text;
+                saveTasksToStorage();
             }
         }
+    }, 1000);
+});
 
-        // Редактирование задачи
-        function editTask(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                editingTaskId = id;
-                document.getElementById('taskInput').value = task.text;
-                document.getElementById('priorityCheck').checked = task.priority;
-                showTaskCard(true);
-            }
-        }
+document.addEventListener('DOMContentLoaded', function() {
+    // Инициализация приложения и загрузка задач
+    loadTasksFromStorage();
 
-        // Удаление задачи
-        function deleteTask(id) {
-            if (confirm('Вы уверены, что хотите удалить эту задачу?')) {
-                const taskElement = document.querySelector(`[data-task-id="${id}"]`);
-                if (taskElement) {
-                    taskElement.style.transition = 'all 0.3s ease';
-                    taskElement.style.opacity = '0';
-                    taskElement.style.transform = 'translateX(20px)';
+    // Настройка автоматического изменения размера текстового поля
+    const taskInput = document.getElementById('taskInput');
 
-                    setTimeout(() => {
-                        tasks = tasks.filter(t => t.id !== id);
-                        renderTasks();
-                    }, 300);
-                }
-            }
-        }
+    // Устанавливаем начальный размер при открытии карточки
+    const originalShowTaskCard = showTaskCard;
+    showTaskCard = function(isEdit = false) {
+        originalShowTaskCard(isEdit);
+        setTimeout(() => {
+            autoResize(taskInput);
+        }, 0);
+    };
+});
 
-        // Переключение статуса задачи
-        function toggleTask(id) {
-            const task = tasks.find(t => t.id === id);
-            if (task) {
-                const taskElement = document.querySelector(`[data-task-id="${id}"]`);
-                if (taskElement) {
-                    taskElement.style.transition = 'all 0.3s ease';
-                    taskElement.style.opacity = '0.5';
-                    taskElement.style.transform = 'scale(0.98)';
+// Закрытие модального окна при клике на оверлей
+document.getElementById('overlay').addEventListener('click', hideTaskCard);
 
-                    setTimeout(() => {
-                        task.completed = !task.completed;
-                        renderTasks();
-                    }, 300);
-                }
-            }
-        }
+// Обработка онлайн/оффлайн состояния
+window.addEventListener('online', function() {
+    console.log('Приложение онлайн');
+    // Здесь можно добавить визуальную индикацию онлайн-статуса
+});
 
-        function autoResize(textarea) {
-            textarea.style.height = 'auto';
-            textarea.style.overflow = 'hidden';
-            const newHeight = Math.min(Math.max(textarea.scrollHeight, 60), 500);
-            textarea.style.height = newHeight + 'px';
-        }
+window.addEventListener('offline', function() {
+    console.log('Приложение оффлайн');
+    // Здесь можно добавить визуальную индикацию оффлайн-статуса
+});
 
-        // Предотвращение закрытия карточки при клике внутри
-        document.getElementById('taskCard').addEventListener('click', (e) => {
-            e.stopPropagation();
-        });
+// Обработка установки PWA
+let deferredPrompt;
 
-        // Обработка клавиши Enter в textarea
-        document.getElementById('taskInput').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter' && !e.shiftKey) {
-                e.preventDefault();
-                saveTask();
-            }
-        });
+window.addEventListener('beforeinstallprompt', (e) => {
+    // Предотвращаем показ стандартного prompt
+    e.preventDefault();
+    // Сохраняем событие для последующего использования
+    deferredPrompt = e;
+    // Опционально: показываем свою кнопку установки
+    // showInstallButton();
+});
 
-        // Обработка клавиши Escape для закрытия модального окна
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') {
-                hideTaskCard();
-            }
-        });
+// Функция для установки PWA (можно вызвать по клику на кнопку)
+async function installPWA() {
+    if (deferredPrompt) {
+        // Показываем prompt
+        deferredPrompt.prompt();
+        // Ждем ответа пользователя
+        const { outcome } = await deferredPrompt.userChoice;
+        // Очищаем сохраненное событие
+        deferredPrompt = null;
+    }
+}
 
-        // Ограничение длины текста задачи
-        const taskInput = document.getElementById('taskInput');
-        const maxLength = 500;
-
-        taskInput.addEventListener('input', function() {
-            if (this.value.length > maxLength) {
-                this.value = this.value.substring(0, maxLength);
-            }
-        });
-
-        // Автосохранение при редактировании
-        let autosaveTimeout;
-        taskInput.addEventListener('input', function() {
-            clearTimeout(autosaveTimeout);
-            autosaveTimeout = setTimeout(() => {
-                const text = this.value.trim();
-                if (text && editingTaskId) {
-                    const taskIndex = tasks.findIndex(t => t.id === editingTaskId);
-                    if (taskIndex !== -1) {
-                        tasks[taskIndex].text = text;
-                        saveTasksToCookies();
-                    }
-                }
-            }, 1000);
-        });
-
-        document.addEventListener('DOMContentLoaded', function() {
-            const taskInput = document.getElementById('taskInput');
-
-            // Auto-resize on input
-            taskInput.addEventListener('input', function() {
-                autoResize(this);
-
-                // Existing character limit logic
-                if (this.value.length > maxLength) {
-                    this.value = this.value.substring(0, maxLength);
-                }
-            });
-
-            // Auto-resize when showing the modal
-            const originalShowTaskCard = showTaskCard;
-            showTaskCard = function(isEdit = false) {
-                originalShowTaskCard(isEdit);
-                setTimeout(() => {
-                    autoResize(taskInput);
-                }, 0);
-            };
-        });
-
-        // Закрытие модального окна при клике на оверлей
-        document.getElementById('overlay').addEventListener('click', hideTaskCard);
-
-        // Инициализация приложения
-        loadTasksFromCookies();
+// Обработка успешной установки
+window.addEventListener('appinstalled', (evt) => {
+    console.log('Приложение успешно установлено');
+});
     </script>
 </body>
 </html>
