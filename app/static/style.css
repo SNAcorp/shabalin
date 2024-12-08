@@ -56,6 +56,10 @@ h1 {
     gap: 12px;
     margin: 20px 0;
     padding: 0 10px;
+    text-align: center;
+}
+
+.inf {
     font-size: 1.2rem;
     color: whitesmoke;
     font-weight: 500;
