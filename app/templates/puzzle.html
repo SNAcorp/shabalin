@@ -5,129 +5,201 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Пазл</title>
     <style>
+        :root {
+            --primary-color: #2563eb;
+            --primary-hover: #1d4ed8;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --border-color: #e5e7eb;
+            --shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
+        }
+
         body {
             margin: 0;
             padding: 20px;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--bg-color);
+            color: #1f2937;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 20px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            color: #1f2937;
+            margin-bottom: 1rem;
+            font-weight: 700;
+        }
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+
+        button:hover {
+            background-color: var(--primary-hover);
+            transform: translateY(-1px);
+        }
+
+        .game-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
         }
 
         .game-container {
-            display: flex;
-            justify-content: center;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
             gap: 40px;
-            padding: 20px;
+            margin-bottom: 40px;
         }
 
         .tiles-area {
-            width: 450px;
-            min-height: 600px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
 
         .tiles-container {
             display: flex;
             flex-wrap: wrap;
-            gap: 5px;
+            gap: 8px;
+            min-height: 400px;
+            padding: 16px;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+        }
+
+        .preview-area {
+            text-align: center;
             margin-bottom: 20px;
+            padding: 16px;
+            background-color: var(--bg-color);
+            border-radius: 8px;
+        }
+
+        .preview-area h3 {
+            margin: 0 0 12px 0;
+            color: #4b5563;
+            font-weight: 500;
+        }
+
+        .preview-area img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
         }
 
         .grid-area {
-            width: 450px;
-            height: 300px;
-            background-color: #fff;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            background-color: var(--card-bg);
+            padding: 24px;
+            border-radius: 12px;
+            box-shadow: var(--shadow);
         }
 
         .puzzle-grid {
             display: grid;
             grid-template-columns: repeat(9, 50px);
             grid-template-rows: repeat(6, 50px);
-            gap: 0;
-            background-color: #eee;
-            border: 2px solid #ccc;
+            gap: 1px;
+            padding: 8px;
+            background-color: var(--border-color);
+            border-radius: 8px;
         }
 
         .grid-cell {
             width: 50px;
             height: 50px;
-            border: 1px solid #ddd;
-            background-color: #fff;
+            background-color: var(--card-bg);
+            border: 1px dashed var(--border-color);
+            transition: all 0.2s ease;
         }
 
         .grid-cell.highlight {
-            background-color: #e6f3ff;
+            background-color: #dbeafe;
+            border-style: solid;
+            border-color: var(--primary-color);
         }
 
         .tile {
             width: 50px;
             height: 50px;
             background-size: 450px 300px;
-            border: 1px solid #999;
+            border: 2px solid var(--border-color);
+            border-radius: 4px;
             cursor: move;
-            transition: transform 0.2s;
+            transition: all 0.2s ease;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
         }
 
         .tile:hover {
             transform: scale(1.05);
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
         }
 
         .tile.dragging {
-            opacity: 0.5;
+            opacity: 0.6;
+            transform: scale(1.1);
         }
 
-        .controls {
-            text-align: center;
-            margin-bottom: 20px;
+        .area-title {
+            font-size: 1.25rem;
+            color: #374151;
+            margin-bottom: 16px;
+            font-weight: 500;
         }
 
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
-            background-color: #4CAF50;
-            color: white;
-            border: none;
-            border-radius: 5px;
-            margin: 0 10px;
-        }
-
-        button:hover {
-            background-color: #45a049;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .header h1 {
-            color: #333;
-            margin-bottom: 10px;
+        @media (max-width: 1200px) {
+            .game-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="header">
-        <h1>Пазл</h1>
+        <h1>Собери пазл</h1>
         <div class="controls">
             <button id="newGame">Новая игра</button>
             <button id="checkSolution">Проверить решение</button>
         </div>
     </div>
 
-    <div class="game-container">
-        <div class="tiles-area">
-            <div class="tiles-container" id="tilesContainer"></div>
-        </div>
+    <div class="game-content">
+        <div class="game-container">
+            <div class="tiles-area">
+                <div class="area-title">Доступные фрагменты</div>
+                <div class="preview-area">
+                    <h3>Итоговое изображение</h3>
+                    <img src="https://shabalin.sna.lol/static/puzzle.jpg" alt="Образец пазла">
+                </div>
+                <div class="tiles-container" id="tilesContainer"></div>
+            </div>
 
-        <div class="grid-area">
-            <div class="puzzle-grid" id="puzzleGrid"></div>
+            <div class="grid-area">
+                <div class="area-title">Игровое поле</div>
+                <div class="puzzle-grid" id="puzzleGrid"></div>
+            </div>
         </div>
     </div>
 
