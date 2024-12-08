@@ -480,48 +480,50 @@ class Minesweeper {
             if (stats.length === 0) {
                 content.innerHTML = '<p>Нет сохраненных игр</p>';
             } else {
-                // Создаем статистику побед/поражений
                 const totalGames = stats.length;
                 const wins = stats.filter(game => game.result === 'Победа').length;
                 const bestTime = Math.min(...stats.filter(game => game.result === 'Победа').map(game => game.time));
 
                 const summaryHTML = `
-                    <div class="stats-summary">
-                        <p>Всего игр: ${totalGames}</p>
-                        <p>Побед: ${wins} (${Math.round(wins/totalGames * 100)}%)</p>
-                        ${wins > 0 ? `<p>Лучшее время: ${bestTime} сек</p>` : ''}
+                    <div class="modal-header">
+                        <h2>Статистика игр</h2>
+                    </div>
+                    <div class="modal-body">
+                        <div class="stats-summary">
+                            <p>Всего игр: ${totalGames}</p>
+                            <p>Побед: ${wins} (${Math.round(wins/totalGames * 100)}%)</p>
+                            ${wins > 0 ? `<p>Лучшее время: ${bestTime} сек</p>` : ''}
+                        </div>
+                        <div class="stats-content">
+                            <table class="stats-table">
+                                <thead>
+                                    <tr>
+                                        <th>Дата</th>
+                                        <th>Результат</th>
+                                        <th>Время</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    ${stats.slice().reverse().map(game => `
+                                        <tr>
+                                            <td>${game.date}</td>
+                                            <td>${game.result}</td>
+                                            <td>${game.time} сек</td>
+                                        </tr>
+                                    `).join('')}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button id="closeStats">Закрыть</button>
                     </div>
                 `;
 
-                // Создаем таблицу последних 10 игр
-                const recentGames = stats.slice(-10).reverse();
-                const tableHTML = `
-                    <table class="stats-table">
-                        <thead>
-                            <tr>
-                                <th>Дата</th>
-                                <th>Результат</th>
-                                <th>Время</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${recentGames.map(game => `
-                                <tr>
-                                    <td>${game.date}</td>
-                                    <td>${game.result}</td>
-                                    <td>${game.time} сек</td>
-                                </tr>
-                            `).join('')}
-                        </tbody>
-                    </table>
-                `;
+                content.innerHTML = summaryHTML;
 
-                content.innerHTML = `
-                    ${summaryHTML}
-                    <div class="stats-content">
-                        ${tableHTML}
-                    </div>
-                `;
+                // Переназначаем обработчик для новой кнопки
+                document.getElementById('closeStats').addEventListener('click', () => this.hideStats());
             }
 
             this.statsModal.style.display = 'block';

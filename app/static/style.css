@@ -58,14 +58,6 @@ h1 {
     padding: 0 10px;
 }
 
-.inf {
-    text-align: center;
-    font-size: 1.2rem;
-    color: whitesmoke;
-    font-weight: 500;
-
-}
-
 button {
     padding: 10px 20px;
     border: none;
@@ -190,8 +182,88 @@ button:active {
     transition: transform 0.3s ease;
     box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
     max-height: 80vh;
+    overflow: hidden;
     display: flex;
     flex-direction: column;
+}
+
+.modal-header {
+    margin-bottom: 20px;
+}
+
+.modal-body {
+    flex: 1;
+    overflow: hidden;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+}
+
+.stats-summary {
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+    margin-bottom: 15px;
+}
+
+.stats-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 10px;
+    margin-bottom: 15px;
+}
+
+.stats-content::-webkit-scrollbar {
+    width: 6px;
+}
+
+.stats-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 3px;
+}
+
+.stats-content::-webkit-scrollbar-thumb {
+    background: #ccc;
+    border-radius: 3px;
+}
+
+.stats-content::-webkit-scrollbar-thumb:hover {
+    background: #aaa;
+}
+
+.modal-footer {
+    margin-top: auto;
+    padding-top: 15px;
+    border-top: 1px solid #eee;
+}
+
+.stats-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.stats-table th {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    color: #2c3e50;
+    border-bottom: 2px solid #eee;
+}
+
+.stats-table td {
+    padding: 10px;
+    border-bottom: 1px solid #eee;
+}
+
+.stats-table tr:last-child td {
+    border-bottom: none;
+}
+
+.stats-table tr:hover td {
+    background-color: #f8f9fa;
 }
 
 .modal.active .modal-content {
@@ -205,13 +277,54 @@ button:active {
     text-align: center;
 }
 
+.stats-content {
+    flex: 1;
+    overflow-y: auto;
+    margin: 15px -25px;
+    padding: 0 25px;
+}
+
+.stats-content::-webkit-scrollbar {
+    width: 8px;
+}
+
+.stats-content::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+.stats-content::-webkit-scrollbar-thumb {
+    background: #888;
+    border-radius: 4px;
+}
+
+.stats-content::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+
 .stats-table {
     width: 100%;
     margin-top: 20px;
     border-collapse: collapse;
     background: white;
     border-radius: 8px;
-    overflow: hidden;
+}
+
+.stats-table thead {
+    position: sticky;
+    top: 0;
+    background: white;
+    z-index: 1;
+}
+
+.stats-table thead::after {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2px;
+    background: #eee;
 }
 
 .stats-table th,
