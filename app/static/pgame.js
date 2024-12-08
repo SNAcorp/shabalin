@@ -1,6 +1,6 @@
 class PuzzleGame {
     constructor() {
-        this.tilesArea = document.getElementById('tilesArea');
+        this.tilesContainer = document.getElementById('tilesContainer');
         this.puzzleGrid = document.getElementById('puzzleGrid');
         this.newGameBtn = document.getElementById('newGame');
         this.checkSolutionBtn = document.getElementById('checkSolution');
@@ -11,6 +11,8 @@ class PuzzleGame {
         this.tiles = [];
         this.gridCells = [];
 
+        this.draggedTile = null;
+
         this.initializeEventListeners();
         this.createGrid();
         this.startNewGame();
@@ -19,52 +21,48 @@ class PuzzleGame {
     initializeEventListeners() {
         this.newGameBtn.addEventListener('click', () => this.startNewGame());
         this.checkSolutionBtn.addEventListener('click', () => this.checkSolution());
+
+        // Предотвращаем стандартное поведение драг-н-дропа для сетки
+        this.puzzleGrid.addEventListener('dragover', (e) => {
+            e.preventDefault();
+        });
     }
 
     createGrid() {
         // Создаем пустую сетку
-        this.puzzleGrid.innerHTML = '';
-        this.gridCells = [];
-
         for (let i = 0; i < this.gridHeight * this.gridWidth; i++) {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
             cell.dataset.index = i;
 
-            this.setupGridCellEvents(cell);
+            // Обработчики для drag and drop
+            cell.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                cell.classList.add('highlight');
+            });
+
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('highlight');
+            });
+
+            cell.addEventListener('drop', (e) => {
+                e.preventDefault();
+                cell.classList.remove('highlight');
+
+                if (this.draggedTile && !cell.hasChildNodes()) {
+                    cell.appendChild(this.draggedTile);
+                    this.draggedTile = null;
+                }
+            });
 
             this.gridCells.push(cell);
             this.puzzleGrid.appendChild(cell);
         }
     }
 
-    setupGridCellEvents(cell) {
-        cell.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            cell.classList.add('highlight');
-        });
-
-        cell.addEventListener('dragleave', () => {
-            cell.classList.remove('highlight');
-        });
-
-        cell.addEventListener('drop', (e) => {
-            e.preventDefault();
-            cell.classList.remove('highlight');
-
-            const tileId = e.dataTransfer.getData('text/plain');
-            const tile = document.getElementById(tileId);
-
-            if (tile && !cell.hasChildNodes()) {
-                cell.appendChild(tile);
-                cell.classList.add('filled');
-            }
-        });
-    }
-
     async startNewGame() {
         try {
-            const response = await fetch('http://shabalin.sna.lol/api/game/new');
+            const response = await fetch('https://shabalin.sna.lol/api/game/new');
             const gameData = await response.json();
 
             this.createTiles(gameData.grid);
@@ -74,18 +72,17 @@ class PuzzleGame {
     }
 
     createTiles(grid) {
-        // Очищаем области
-        this.tilesArea.innerHTML = '';
+        this.tilesContainer.innerHTML = '';
+        this.tiles = [];
+
+        // Очищаем сетку
         this.gridCells.forEach(cell => {
             cell.innerHTML = '';
-            cell.classList.remove('filled');
         });
 
-        // Создаем новые тайлы
         grid.forEach((position, index) => {
             const tile = document.createElement('div');
             tile.className = 'tile';
-            tile.id = `tile-${index}`;
             tile.draggable = true;
 
             // Вычисляем позицию фонового изображения
@@ -95,61 +92,55 @@ class PuzzleGame {
             tile.style.backgroundImage = 'url("https://shabalin.sna.lol/static/puzzle.jpg")';
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
-            this.setupTileEvents(tile);
+            // Добавляем data-атрибут для определения правильной позиции
+            tile.dataset.correctPosition = position;
+
+            // Обработчики для drag and drop
+            tile.addEventListener('dragstart', () => {
+                this.draggedTile = tile;
+                tile.classList.add('dragging');
+            });
+
+            tile.addEventListener('dragend', () => {
+                tile.classList.remove('dragging');
+            });
 
             this.tiles.push(tile);
-            this.tilesArea.appendChild(tile);
+            this.tilesContainer.appendChild(tile);
         });
     }
 
-    setupTileEvents(tile) {
-        tile.addEventListener('dragstart', (e) => {
-            e.dataTransfer.setData('text/plain', tile.id);
-            tile.classList.add('dragging');
+    getCurrentState() {
+        const state = new Array(this.gridWidth * this.gridHeight).fill(null);
 
-            // Если тайл находится в ячейке сетки, освобождаем ячейку
-            if (tile.parentElement.classList.contains('grid-cell')) {
-                tile.parentElement.classList.remove('filled');
+        this.gridCells.forEach((cell, index) => {
+            const tile = cell.firstChild;
+            if (tile) {
+                state[index] = parseInt(tile.dataset.correctPosition);
             }
         });
 
-        tile.addEventListener('dragend', () => {
-            tile.classList.remove('dragging');
-        });
-    }
-
-    getCurrentGrid() {
-        return this.gridCells.map(cell => {
-            const tile = cell.firstChild;
-            if (!tile) return null;
-
-            const [x, y] = tile.style.backgroundPosition
-                .split(' ')
-                .map(pos => parseInt(pos));
-
-            const col = Math.abs(x / this.tileSize);
-            const row = Math.abs(y / this.tileSize);
-
-            return row * this.gridWidth + col;
-        });
+        return state;
     }
 
     async checkSolution() {
-        const grid = this.getCurrentGrid();
+        const currentState = this.getCurrentState();
 
         // Проверяем, все ли ячейки заполнены
-        if (grid.includes(null)) {
+        if (currentState.includes(null)) {
             alert('Пожалуйста, заполните все ячейки сетки!');
             return;
         }
 
         try {
-            const response = await fetch('http://shabalin.sna.lol/api/game/check', {
+            const response = await fetch('https://shabalin.sna.lol/api/game/check', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({ grid })
+                body: JSON.stringify({
+                    grid: currentState
+                })
             });
 
             const result = await response.json();
