@@ -26,85 +26,6 @@ class Minesweeper {
         this.initializeTouchControls();
     }
 
-
-    initializeCustomEventHandlers() {
-        // Обработчик начала игры
-        document.addEventListener(MinesweeperEvents.START, (e) => {
-            console.log('Game started');
-            this.startTimer();
-        });
-
-        // Обработчик каждого хода
-        document.addEventListener(MinesweeperEvents.STEP, (e) => {
-            const { x, y, value } = e.detail;
-            console.log(`Step at (${x}, ${y}) with value ${value}`);
-
-            if (value === -1) {
-                this.handleGameOver(false);
-            } else {
-                this.checkWin();
-            }
-        });
-
-        // Обработчик конца игры
-        document.addEventListener(MinesweeperEvents.END, (e) => {
-            const { won, time } = e.detail;
-            console.log(`Game ended. Won: ${won}, Time: ${time}s`);
-            this.saveStats(won);
-            this.stopTimer();
-            this.showGameOver(won);
-        });
-
-        // Обработчик установки флага
-        document.addEventListener(MinesweeperEvents.FLAG, (e) => {
-            const { x, y, flagged } = e.detail;
-            console.log(`Flag ${flagged ? 'placed' : 'removed'} at (${x}, ${y})`);
-            this.updateMinesCount();
-        });
-
-        // Обработчик тика таймера
-        document.addEventListener(MinesweeperEvents.TIMER_TICK, (e) => {
-            const { time } = e.detail;
-            this.timerElement.textContent = `Время: ${time}`;
-        });
-    }
-
-    handleGameOver(won) {
-        this.gameOver = true;
-        const time = Math.floor((Date.now() - this.startTime) / 1000);
-
-        if (!won) {
-            this.revealAll();
-        }
-
-        // Отправляем событие окончания игры
-        this.dispatchGameEvent(MinesweeperEvents.END, {
-            won,
-            time,
-            revealed: this.revealed.size,
-            totalMines: this.MINES_COUNT
-        });
-    }
-
-    checkWin() {
-        const totalCells = this.BOARD_SIZE * this.BOARD_SIZE;
-        const revealedCount = this.revealed.size;
-        const remainingCells = totalCells - revealedCount;
-
-        if (remainingCells === this.MINES_COUNT) {
-            this.handleGameOver(true);
-        }
-    }
-
-    // Метод для отправки пользовательских событий
-    dispatchGameEvent(eventName, detail = {}) {
-        const event = new CustomEvent(eventName, {
-            detail,
-            bubbles: true,
-            cancelable: true
-        });
-        document.dispatchEvent(event);
-    }
     initializeBoard() {
         this.board = Array(this.BOARD_SIZE).fill().map(() =>
             Array(this.BOARD_SIZE).fill(0)
@@ -131,24 +52,82 @@ class Minesweeper {
             this.resetGame();
         });
 
-        document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.hideStats();
+                this.hideGameOver();
+            } else {
+                this.handleKeyboard(e);
+            }
+        });
 
-        // Предотвращаем контекстное меню на правый клик
         this.boardElement.addEventListener('contextmenu', (e) => e.preventDefault());
+
+        // Обработчики кликов по модальным окнам
+        this.statsModal.addEventListener('click', (e) => {
+            if (e.target === this.statsModal) {
+                this.hideStats();
+            }
+        });
+
+        this.gameOverModal.addEventListener('click', (e) => {
+            if (e.target === this.gameOverModal) {
+                this.hideGameOver();
+            }
+        });
+    }
+
+    initializeCustomEventHandlers() {
+        document.addEventListener(MinesweeperEvents.START, (e) => {
+            console.log('Game started');
+            this.startTimer();
+        });
+
+        document.addEventListener(MinesweeperEvents.STEP, (e) => {
+            const { x, y, value } = e.detail;
+            console.log(`Step at (${x}, ${y}) with value ${value}`);
+
+            if (value === -1) {
+                this.handleGameOver(false);
+            } else {
+                this.checkWin();
+            }
+        });
+
+        document.addEventListener(MinesweeperEvents.END, (e) => {
+            const { won, time } = e.detail;
+            console.log(`Game ended. Won: ${won}, Time: ${time}s`);
+            this.saveStats(won);
+            this.stopTimer();
+            this.showGameOver(won);
+        });
+
+        document.addEventListener(MinesweeperEvents.FLAG, (e) => {
+            const { x, y, flagged } = e.detail;
+            console.log(`Flag ${flagged ? 'placed' : 'removed'} at (${x}, ${y})`);
+            this.updateMinesCount();
+        });
+
+        document.addEventListener(MinesweeperEvents.TIMER_TICK, (e) => {
+            const { time } = e.detail;
+            this.timerElement.textContent = `Время: ${time}`;
+        });
     }
 
     initializeTouchControls() {
         let touchStartTime;
         let touchTimeout;
         let lastTapTime = 0;
+        let isTouchMoving = false;
 
         this.boardElement.addEventListener('touchstart', (e) => {
             touchStartTime = Date.now();
+            isTouchMoving = false;
             const touch = e.touches[0];
             const element = document.elementFromPoint(touch.clientX, touch.clientY);
 
             touchTimeout = setTimeout(() => {
-                if (element && element.classList.contains('cell')) {
+                if (!isTouchMoving && element?.classList.contains('cell')) {
                     const x = parseInt(element.dataset.x);
                     const y = parseInt(element.dataset.y);
                     this.toggleFlag(x, y);
@@ -156,17 +135,23 @@ class Minesweeper {
             }, 500);
         });
 
+        this.boardElement.addEventListener('touchmove', (e) => {
+            isTouchMoving = true;
+            e.preventDefault();
+        }, { passive: false });
+
         this.boardElement.addEventListener('touchend', (e) => {
             clearTimeout(touchTimeout);
+            if (isTouchMoving) return;
+
             const touch = e.changedTouches[0];
             const element = document.elementFromPoint(touch.clientX, touch.clientY);
 
-            if (element && element.classList.contains('cell')) {
+            if (element?.classList.contains('cell')) {
                 const x = parseInt(element.dataset.x);
                 const y = parseInt(element.dataset.y);
                 const currentTime = Date.now();
 
-                // Определяем двойное нажатие
                 if (currentTime - lastTapTime < 300) {
                     this.toggleFlag(x, y);
                 } else if (Date.now() - touchStartTime < 500) {
@@ -176,17 +161,21 @@ class Minesweeper {
                 lastTapTime = currentTime;
             }
         });
+    }
 
-        // Предотвращаем зум и скролл на мобильных
-        this.boardElement.addEventListener('touchmove', (e) => e.preventDefault(),
-            { passive: false });
+    dispatchGameEvent(eventName, detail = {}) {
+        const event = new CustomEvent(eventName, {
+            detail,
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(event);
     }
 
     placeMines(firstX, firstY) {
         let minesPlaced = 0;
         const safeCells = new Set();
 
-        // Создаем безопасную зону вокруг первого клика
         for (let dy = -1; dy <= 1; dy++) {
             for (let dx = -1; dx <= 1; dx++) {
                 const ny = firstY + dy;
@@ -306,7 +295,6 @@ class Minesweeper {
         this.revealed.add(key);
         const value = this.board[y][x];
 
-        // Отправляем событие о ходе
         this.dispatchGameEvent(MinesweeperEvents.STEP, { x, y, value });
 
         if (value === 0) {
@@ -335,9 +323,7 @@ class Minesweeper {
             this.flagged.delete(key);
         }
 
-        // Отправляем событие об установке/снятии флага
         this.dispatchGameEvent(MinesweeperEvents.FLAG, { x, y, flagged });
-
         this.renderBoard();
     }
 
@@ -378,6 +364,32 @@ class Minesweeper {
             }
         }
         this.renderBoard();
+    }
+
+    handleGameOver(won) {
+        this.gameOver = true;
+        const time = Math.floor((Date.now() - this.startTime) / 1000);
+
+        if (!won) {
+            this.revealAll();
+        }
+
+        this.dispatchGameEvent(MinesweeperEvents.END, {
+            won,
+            time,
+            revealed: this.revealed.size,
+            totalMines: this.MINES_COUNT
+        });
+    }
+
+    checkWin() {
+        const totalCells = this.BOARD_SIZE * this.BOARD_SIZE;
+        const revealedCount = this.revealed.size;
+        const remainingCells = totalCells - revealedCount;
+
+        if (remainingCells === this.MINES_COUNT) {
+            this.handleGameOver(true);
+        }
     }
 
     startTimer() {
@@ -426,8 +438,6 @@ class Minesweeper {
             'Вы попали на мину. Попробуйте еще раз!';
 
         this.gameOverModal.style.display = 'block';
-
-        // Анимация появления модального окна
         requestAnimationFrame(() => {
             this.gameOverModal.classList.add('active');
         });
@@ -506,7 +516,12 @@ class Minesweeper {
                     </table>
                 `;
 
-                content.innerHTML = summaryHTML + tableHTML;
+                content.innerHTML = `
+                    ${summaryHTML}
+                    <div class="stats-content">
+                        ${tableHTML}
+                    </div>
+                `;
             }
 
             this.statsModal.style.display = 'block';
@@ -527,19 +542,27 @@ class Minesweeper {
     }
 }
 
-// Инициализация игры при загрузке страницы
+// Инициализация игры и добавление слушателей событий
 document.addEventListener('DOMContentLoaded', () => {
     const game = new Minesweeper();
 
-    // Пример подписки на события для внешнего кода
-    document.addEventListener(MinesweeperEvents.START, () => {
-        // Можно добавить дополнительную логику при старте игры
-        console.log('Игра началась!');
+    // Примеры использования пользовательских событий
+    document.addEventListener(MinesweeperEvents.START, (e) => {
+        console.log('Новая игра началась!');
+    });
+
+    document.addEventListener(MinesweeperEvents.STEP, (e) => {
+        const { x, y, value } = e.detail;
+        console.log(`Ход: (${x}, ${y}) = ${value}`);
     });
 
     document.addEventListener(MinesweeperEvents.END, (e) => {
-        // Можно добавить дополнительную логику при завершении игры
-        const { won, time } = e.detail;
-        console.log(`Игра завершена! ${won ? 'Победа' : 'Поражение'} за ${time} секунд`);
+        const { won, time, revealed } = e.detail;
+        console.log(`Игра завершена! ${won ? 'Победа' : 'Поражение'} за ${time} секунд. Открыто клеток: ${revealed}`);
+    });
+
+    document.addEventListener(MinesweeperEvents.FLAG, (e) => {
+        const { x, y, flagged } = e.detail;
+        console.log(`Флаг ${flagged ? 'установлен' : 'снят'} на (${x}, ${y})`);
     });
 });
