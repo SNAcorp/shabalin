@@ -41,4 +41,7 @@ async def read_index(request: Request):
 async def read_index(request: Request):
     return templates.TemplateResponse("tasks.html", {"request": request})
 
+@app.get("/mineswipper")
+async def read_index(request: Request):
+    return templates.TemplateResponse("mineswipper.html", {"request": request})
 
