@@ -1,57 +1,95 @@
 :root {
-    --cell-size: 40px;
+    --cell-size: clamp(30px, 8vw, 40px);
     --border-color: #7B7B7B;
-    --cell-bg: #C0C0C0;
-    --cell-revealed: #E0E0E0;
-    --border-revealed: #A0A0A0;
+    --cell-bg: #E8E8E8;
+    --cell-revealed: #FFFFFF;
+    --border-revealed: #D0D0D0;
+    --primary-color: #4CAF50;
+    --primary-hover: #45a049;
+    --danger-color: #ff4444;
+    --modal-bg: rgba(0, 0, 0, 0.7);
 }
 
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
-    font-family: Arial, sans-serif;
-    background-color: #f0f0f0;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
+    padding: 20px;
+    line-height: 1.6;
 }
 
 .container {
     background-color: white;
     padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+    max-width: 100%;
+    width: fit-content;
 }
 
 header {
     text-align: center;
-    margin-bottom: 20px;
+    margin-bottom: 24px;
+}
+
+h1 {
+    color: #2c3e50;
+    font-size: 2rem;
+    margin-bottom: 16px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
 }
 
 .game-controls {
-    margin: 15px 0;
-    display: flex;
-    justify-content: center;
-    gap: 15px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 12px;
+    margin: 20px 0;
+    padding: 0 10px;
 }
 
 button {
-    padding: 8px 16px;
+    padding: 10px 20px;
     border: none;
-    border-radius: 4px;
-    background-color: #4CAF50;
+    border-radius: 8px;
+    background-color: var(--primary-color);
     color: white;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: all 0.3s ease;
+    font-weight: 500;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 button:hover {
-    background-color: #45a049;
+    background-color: var(--primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+button:active {
+    transform: translateY(0);
+}
+
+.game-info {
+    display: flex;
+    justify-content: space-around;
+    margin: 15px 0;
+    font-size: 1.1rem;
+    color: #2c3e50;
+    font-weight: 500;
 }
 
 .game-board {
@@ -59,8 +97,12 @@ button:hover {
     grid-template-columns: repeat(12, var(--cell-size));
     gap: 1px;
     background-color: var(--border-color);
-    border: 1px solid var(--border-color);
-    user-select: none;
+    border: 2px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 0 auto;
+    max-width: 100%;
+    touch-action: manipulation;
 }
 
 .cell {
@@ -72,11 +114,18 @@ button:hover {
     align-items: center;
     font-weight: bold;
     cursor: pointer;
+    transition: background-color 0.2s ease;
+    user-select: none;
+    font-size: calc(var(--cell-size) * 0.5);
+}
+
+.cell:hover {
+    background-color: #F0F0F0;
 }
 
 .cell.revealed {
     background-color: var(--cell-revealed);
-    border: 1px solid var(--border-revealed);
+    box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.1);
 }
 
 .cell.flagged {
@@ -86,20 +135,21 @@ button:hover {
 
 .cell.flagged::after {
     content: "🚩";
-    font-size: 20px;
+    font-size: calc(var(--cell-size) * 0.6);
 }
 
 .cell.mine {
-    background-color: red;
+    background-color: var(--danger-color);
 }
 
 .cell.mine::after {
     content: "💣";
-    font-size: 20px;
+    font-size: calc(var(--cell-size) * 0.6);
 }
 
 .cell.focused {
-    outline: 2px solid #4CAF50;
+    outline: 3px solid var(--primary-color);
+    outline-offset: -3px;
     z-index: 1;
 }
 
@@ -110,31 +160,155 @@ button:hover {
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
+    background-color: var(--modal-bg);
+    z-index: 1000;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.modal.active {
+    opacity: 1;
 }
 
 .modal-content {
     background-color: white;
     margin: 15% auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 80%;
+    padding: 25px;
+    border-radius: 16px;
+    width: 90%;
     max-width: 500px;
+    position: relative;
+    transform: translateY(-20px);
+    transition: transform 0.3s ease;
+    box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
+}
+
+.modal.active .modal-content {
+    transform: translateY(0);
+}
+
+.modal h2 {
+    color: #2c3e50;
+    margin-bottom: 20px;
+    font-size: 1.5rem;
+    text-align: center;
 }
 
 .stats-table {
     width: 100%;
-    margin-top: 15px;
+    margin-top: 20px;
     border-collapse: collapse;
+    background: white;
+    border-radius: 8px;
+    overflow: hidden;
 }
 
 .stats-table th,
 .stats-table td {
-    padding: 8px;
-    border: 1px solid #ddd;
+    padding: 12px;
     text-align: left;
+    border-bottom: 1px solid #eee;
 }
 
 .stats-table th {
-    background-color: #f5f5f5;
+    background-color: #f8f9fa;
+    font-weight: 600;
+    color: #2c3e50;
+    text-transform: uppercase;
+    font-size: 0.8rem;
+    letter-spacing: 0.5px;
+}
+
+.stats-table tr:last-child td {
+    border-bottom: none;
+}
+
+.stats-table tbody tr:hover {
+    background-color: #f8f9fa;
+}
+
+/* Медиа-запросы для адаптивности */
+@media (max-width: 768px) {
+    :root {
+        --cell-size: clamp(25px, 7vw, 35px);
+    }
+
+    .container {
+        padding: 15px;
+    }
+
+    h1 {
+        font-size: 1.5rem;
+    }
+
+    .game-controls {
+        grid-template-columns: 1fr 1fr;
+    }
+
+    .modal-content {
+        margin: 10% auto;
+        padding: 20px;
+        width: 95%;
+    }
+}
+
+@media (max-width: 480px) {
+    :root {
+        --cell-size: clamp(20px, 6vw, 30px);
+    }
+
+    .container {
+        padding: 10px;
+    }
+
+    button {
+        padding: 8px 16px;
+        font-size: 0.8rem;
+    }
+
+    .game-info {
+        font-size: 0.9rem;
+    }
+}
+
+/* Поддержка тёмной темы */
+@media (prefers-color-scheme: dark) {
+    body {
+        background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+    }
+
+    .container {
+        background-color: #2c3e50;
+    }
+
+    h1, .game-info {
+        color: #ecf0f1;
+    }
+
+    .cell {
+        background-color: #34495e;
+    }
+
+    .cell.revealed {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+    }
+
+    .stats-table {
+        background-color: #34495e;
+    }
+
+    .stats-table th {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+    }
+
+    .modal-content {
+        background-color: #34495e;
+        color: #ecf0f1;
+    }
+
+    .modal h2 {
+        color: #ecf0f1;
+    }
 }

@@ -14,6 +14,7 @@ class Minesweeper {
         this.initializeBoard();
         this.initializeDOM();
         this.initializeEventListeners();
+        this.initializeTouchControls();
     }
 
     initializeBoard() {
@@ -43,18 +44,76 @@ class Minesweeper {
         });
 
         document.addEventListener('keydown', (e) => this.handleKeyboard(e));
+
+        // Предотвращаем контекстное меню на правый клик
+        this.boardElement.addEventListener('contextmenu', (e) => e.preventDefault());
+    }
+
+    initializeTouchControls() {
+        let touchStartTime;
+        let touchTimeout;
+        let lastTapTime = 0;
+
+        this.boardElement.addEventListener('touchstart', (e) => {
+            touchStartTime = Date.now();
+            const touch = e.touches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+            touchTimeout = setTimeout(() => {
+                if (element && element.classList.contains('cell')) {
+                    const x = parseInt(element.dataset.x);
+                    const y = parseInt(element.dataset.y);
+                    this.toggleFlag(x, y);
+                }
+            }, 500);
+        });
+
+        this.boardElement.addEventListener('touchend', (e) => {
+            clearTimeout(touchTimeout);
+            const touch = e.changedTouches[0];
+            const element = document.elementFromPoint(touch.clientX, touch.clientY);
+
+            if (element && element.classList.contains('cell')) {
+                const x = parseInt(element.dataset.x);
+                const y = parseInt(element.dataset.y);
+                const currentTime = Date.now();
+
+                // Определяем двойное нажатие
+                if (currentTime - lastTapTime < 300) {
+                    this.toggleFlag(x, y);
+                } else if (Date.now() - touchStartTime < 500) {
+                    this.handleClick(x, y);
+                }
+
+                lastTapTime = currentTime;
+            }
+        });
+
+        // Предотвращаем зум и скролл на мобильных
+        this.boardElement.addEventListener('touchmove', (e) => e.preventDefault(),
+            { passive: false });
     }
 
     placeMines(firstX, firstY) {
         let minesPlaced = 0;
+        const safeCells = new Set();
+
+        // Создаем безопасную зону вокруг первого клика
+        for (let dy = -1; dy <= 1; dy++) {
+            for (let dx = -1; dx <= 1; dx++) {
+                const ny = firstY + dy;
+                const nx = firstX + dx;
+                if (ny >= 0 && ny < this.BOARD_SIZE && nx >= 0 && nx < this.BOARD_SIZE) {
+                    safeCells.add(`${nx},${ny}`);
+                }
+            }
+        }
+
         while (minesPlaced < this.MINES_COUNT) {
             const x = Math.floor(Math.random() * this.BOARD_SIZE);
             const y = Math.floor(Math.random() * this.BOARD_SIZE);
 
-            // Предотвращаем размещение мины на первом клике и вокруг него
-            if (x === firstX && y === firstY) continue;
-            if (Math.abs(x - firstX) <= 1 && Math.abs(y - firstY) <= 1) continue;
-            if (this.board[y][x] === -1) continue;
+            if (safeCells.has(`${x},${y}`) || this.board[y][x] === -1) continue;
 
             this.board[y][x] = -1;
             minesPlaced++;
@@ -84,6 +143,8 @@ class Minesweeper {
 
     renderBoard() {
         this.boardElement.innerHTML = '';
+        const fragment = document.createDocumentFragment();
+
         for (let y = 0; y < this.BOARD_SIZE; y++) {
             for (let x = 0; x < this.BOARD_SIZE; x++) {
                 const cell = document.createElement('div');
@@ -98,7 +159,6 @@ class Minesweeper {
                         cell.classList.add('mine');
                     } else if (value > 0) {
                         cell.textContent = value;
-                        // Добавляем цвета для чисел
                         cell.style.color = this.getNumberColor(value);
                     }
                 }
@@ -117,9 +177,11 @@ class Minesweeper {
                     this.toggleFlag(x, y);
                 });
 
-                this.boardElement.appendChild(cell);
+                fragment.appendChild(cell);
             }
         }
+
+        this.boardElement.appendChild(fragment);
     }
 
     getNumberColor(number) {
@@ -150,9 +212,10 @@ class Minesweeper {
     }
 
     revealCell(x, y) {
-        if (this.revealed.has(`${x},${y}`)) return;
+        const key = `${x},${y}`;
+        if (this.revealed.has(key) || this.flagged.has(key)) return;
 
-        this.revealed.add(`${x},${y}`);
+        this.revealed.add(key);
 
         if (this.board[y][x] === -1) {
             this.gameOver = true;
@@ -178,12 +241,12 @@ class Minesweeper {
     }
 
     toggleFlag(x, y) {
-        if (this.revealed.has(`${x},${y}`)) return;
+        if (this.gameOver || this.revealed.has(`${x},${y}`)) return;
 
         const key = `${x},${y}`;
         if (this.flagged.has(key)) {
             this.flagged.delete(key);
-        } else {
+        } else if (this.flagged.size < this.MINES_COUNT) {
             this.flagged.add(key);
         }
 
@@ -264,13 +327,13 @@ class Minesweeper {
     }
 
     resetGame() {
+        this.stopTimer();
         this.board = [];
         this.revealed = new Set();
         this.flagged = new Set();
         this.gameOver = false;
         this.firstMove = true;
         this.currentFocus = { x: 0, y: 0 };
-        this.stopTimer();
         this.timerElement.textContent = 'Время: 0';
 
         this.initializeBoard();
@@ -281,66 +344,112 @@ class Minesweeper {
     showGameOver(won) {
         const title = document.getElementById('gameOverTitle');
         const message = document.getElementById('gameOverMessage');
+        const elapsedTime = Math.floor((Date.now() - this.startTime) / 1000);
 
         title.textContent = won ? 'Победа!' : 'Игра окончена';
         message.textContent = won ?
-            'Поздравляем! Вы нашли все мины!' :
+            `Поздравляем! Вы нашли все мины за ${elapsedTime} секунд!` :
             'Вы попали на мину. Попробуйте еще раз!';
 
         this.gameOverModal.style.display = 'block';
+
+        // Анимация появления модального окна
+        requestAnimationFrame(() => {
+            this.gameOverModal.classList.add('active');
+        });
     }
 
     hideGameOver() {
-        this.gameOverModal.style.display = 'none';
+        this.gameOverModal.classList.remove('active');
+        setTimeout(() => {
+            this.gameOverModal.style.display = 'none';
+        }, 300);
     }
 
     saveStats(won) {
-        const stats = JSON.parse(localStorage.getItem('minesweeperStats') || '[]');
-        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        try {
+            const stats = JSON.parse(localStorage.getItem('minesweeperStats') || '[]');
+            const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
 
-        stats.push({
-            date: new Date().toLocaleString(),
-            result: won ? 'Победа' : 'Поражение',
-            time: elapsed
-        });
+            stats.push({
+                date: new Date().toLocaleString(),
+                result: won ? 'Победа' : 'Поражение',
+                time: elapsed
+            });
 
-        localStorage.setItem('minesweeperStats', JSON.stringify(stats));
+            // Ограничиваем количество сохраняемых игр
+            if (stats.length > 50) {
+                stats.shift();
+            }
+
+            localStorage.setItem('minesweeperStats', JSON.stringify(stats));
+        } catch (error) {
+            console.error('Ошибка при сохранении статистики:', error);
+        }
     }
 
     showStats() {
-        const stats = JSON.parse(localStorage.getItem('minesweeperStats') || '[]');
-        const content = document.getElementById('statsContent');
+        try {
+            const stats = JSON.parse(localStorage.getItem('minesweeperStats') || '[]');
+            const content = document.getElementById('statsContent');
 
-        if (stats.length === 0) {
-            content.innerHTML = '<p>Нет сохраненных игр</p>';
-        } else {
-            const table = document.createElement('table');
-            table.className = 'stats-table';
+            if (stats.length === 0) {
+                content.innerHTML = '<p>Нет сохраненных игр</p>';
+            } else {
+                // Создаем статистику побед/поражений
+                const totalGames = stats.length;
+                const wins = stats.filter(game => game.result === 'Победа').length;
+                const bestTime = Math.min(...stats.filter(game => game.result === 'Победа').map(game => game.time));
 
-            table.innerHTML = `
-                <tr>
-                    <th>Дата</th>
-                    <th>Результат</th>
-                    <th>Время</th>
-                </tr>
-                ${stats.map(game => `
-                    <tr>
-                        <td>${game.date}</td>
-                        <td>${game.result}</td>
-                        <td>${game.time} сек</td>
-                    </tr>
-                `).join('')}
-            `;
+                const summaryHTML = `
+                    <div class="stats-summary">
+                        <p>Всего игр: ${totalGames}</p>
+                        <p>Побед: ${wins} (${Math.round(wins/totalGames * 100)}%)</p>
+                        ${wins > 0 ? `<p>Лучшее время: ${bestTime} сек</p>` : ''}
+                    </div>
+                `;
 
-            content.innerHTML = '';
-            content.appendChild(table);
+                // Создаем таблицу последних 10 игр
+                const recentGames = stats.slice(-10).reverse();
+                const tableHTML = `
+                    <table class="stats-table">
+                        <thead>
+                            <tr>
+                                <th>Дата</th>
+                                <th>Результат</th>
+                                <th>Время</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${recentGames.map(game => `
+                                <tr>
+                                    <td>${game.date}</td>
+                                    <td>${game.result}</td>
+                                    <td>${game.time} сек</td>
+                                </tr>
+                            `).join('')}
+                        </tbody>
+                    </table>
+                `;
+
+                content.innerHTML = summaryHTML + tableHTML;
+            }
+
+            this.statsModal.style.display = 'block';
+            requestAnimationFrame(() => {
+                this.statsModal.classList.add('active');
+            });
+        } catch (error) {
+            console.error('Ошибка при загрузке статистики:', error);
+            content.innerHTML = '<p>Ошибка при загрузке статистики</p>';
         }
-
-        this.statsModal.style.display = 'block';
     }
 
     hideStats() {
-        this.statsModal.style.display = 'none';
+        this.statsModal.classList.remove('active');
+        setTimeout(() => {
+            this.statsModal.style.display = 'none';
+        }, 300);
     }
 }
 
