@@ -1,3 +1,11 @@
+class MinesweeperEvents {
+    static START = 'mine.start';
+    static STEP = 'mine.step';
+    static END = 'mine.end';
+    static FLAG = 'mine.flag';
+    static TIMER_TICK = 'mine.timer';
+}
+
 class Minesweeper {
     constructor() {
         this.BOARD_SIZE = 12;
@@ -14,9 +22,89 @@ class Minesweeper {
         this.initializeBoard();
         this.initializeDOM();
         this.initializeEventListeners();
+        this.initializeCustomEventHandlers();
         this.initializeTouchControls();
     }
 
+
+    initializeCustomEventHandlers() {
+        // Обработчик начала игры
+        document.addEventListener(MinesweeperEvents.START, (e) => {
+            console.log('Game started');
+            this.startTimer();
+        });
+
+        // Обработчик каждого хода
+        document.addEventListener(MinesweeperEvents.STEP, (e) => {
+            const { x, y, value } = e.detail;
+            console.log(`Step at (${x}, ${y}) with value ${value}`);
+
+            if (value === -1) {
+                this.handleGameOver(false);
+            } else {
+                this.checkWin();
+            }
+        });
+
+        // Обработчик конца игры
+        document.addEventListener(MinesweeperEvents.END, (e) => {
+            const { won, time } = e.detail;
+            console.log(`Game ended. Won: ${won}, Time: ${time}s`);
+            this.saveStats(won);
+            this.stopTimer();
+            this.showGameOver(won);
+        });
+
+        // Обработчик установки флага
+        document.addEventListener(MinesweeperEvents.FLAG, (e) => {
+            const { x, y, flagged } = e.detail;
+            console.log(`Flag ${flagged ? 'placed' : 'removed'} at (${x}, ${y})`);
+            this.updateMinesCount();
+        });
+
+        // Обработчик тика таймера
+        document.addEventListener(MinesweeperEvents.TIMER_TICK, (e) => {
+            const { time } = e.detail;
+            this.timerElement.textContent = `Время: ${time}`;
+        });
+    }
+
+    handleGameOver(won) {
+        this.gameOver = true;
+        const time = Math.floor((Date.now() - this.startTime) / 1000);
+
+        if (!won) {
+            this.revealAll();
+        }
+
+        // Отправляем событие окончания игры
+        this.dispatchGameEvent(MinesweeperEvents.END, {
+            won,
+            time,
+            revealed: this.revealed.size,
+            totalMines: this.MINES_COUNT
+        });
+    }
+
+    checkWin() {
+        const totalCells = this.BOARD_SIZE * this.BOARD_SIZE;
+        const revealedCount = this.revealed.size;
+        const remainingCells = totalCells - revealedCount;
+
+        if (remainingCells === this.MINES_COUNT) {
+            this.handleGameOver(true);
+        }
+    }
+
+    // Метод для отправки пользовательских событий
+    dispatchGameEvent(eventName, detail = {}) {
+        const event = new CustomEvent(eventName, {
+            detail,
+            bubbles: true,
+            cancelable: true
+        });
+        document.dispatchEvent(event);
+    }
     initializeBoard() {
         this.board = Array(this.BOARD_SIZE).fill().map(() =>
             Array(this.BOARD_SIZE).fill(0)
@@ -205,7 +293,7 @@ class Minesweeper {
         if (this.firstMove) {
             this.placeMines(x, y);
             this.firstMove = false;
-            this.startTimer();
+            this.dispatchGameEvent(MinesweeperEvents.START, { x, y });
         }
 
         this.revealCell(x, y);
@@ -216,16 +304,12 @@ class Minesweeper {
         if (this.revealed.has(key) || this.flagged.has(key)) return;
 
         this.revealed.add(key);
+        const value = this.board[y][x];
 
-        if (this.board[y][x] === -1) {
-            this.gameOver = true;
-            this.revealAll();
-            this.stopTimer();
-            this.showGameOver(false);
-            return;
-        }
+        // Отправляем событие о ходе
+        this.dispatchGameEvent(MinesweeperEvents.STEP, { x, y, value });
 
-        if (this.board[y][x] === 0) {
+        if (value === 0) {
             for (let dy = -1; dy <= 1; dy++) {
                 for (let dx = -1; dx <= 1; dx++) {
                     const ny = y + dy;
@@ -237,21 +321,24 @@ class Minesweeper {
         }
 
         this.renderBoard();
-        this.checkWin();
     }
 
     toggleFlag(x, y) {
         if (this.gameOver || this.revealed.has(`${x},${y}`)) return;
 
         const key = `${x},${y}`;
-        if (this.flagged.has(key)) {
-            this.flagged.delete(key);
-        } else if (this.flagged.size < this.MINES_COUNT) {
+        const flagged = !this.flagged.has(key);
+
+        if (flagged && this.flagged.size < this.MINES_COUNT) {
             this.flagged.add(key);
+        } else if (!flagged) {
+            this.flagged.delete(key);
         }
 
+        // Отправляем событие об установке/снятии флага
+        this.dispatchGameEvent(MinesweeperEvents.FLAG, { x, y, flagged });
+
         this.renderBoard();
-        this.updateMinesCount();
     }
 
     handleKeyboard(e) {
@@ -293,24 +380,11 @@ class Minesweeper {
         this.renderBoard();
     }
 
-    checkWin() {
-        const totalCells = this.BOARD_SIZE * this.BOARD_SIZE;
-        const revealedCount = this.revealed.size;
-        const remainingCells = totalCells - revealedCount;
-
-        if (remainingCells === this.MINES_COUNT) {
-            this.gameOver = true;
-            this.stopTimer();
-            this.showGameOver(true);
-            this.saveStats(true);
-        }
-    }
-
     startTimer() {
         this.startTime = Date.now();
         this.timerInterval = setInterval(() => {
             const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-            this.timerElement.textContent = `Время: ${elapsed}`;
+            this.dispatchGameEvent(MinesweeperEvents.TIMER_TICK, { time: elapsed });
         }, 1000);
     }
 
@@ -454,6 +528,18 @@ class Minesweeper {
 }
 
 // Инициализация игры при загрузке страницы
-window.addEventListener('load', () => {
-    new Minesweeper();
+document.addEventListener('DOMContentLoaded', () => {
+    const game = new Minesweeper();
+
+    // Пример подписки на события для внешнего кода
+    document.addEventListener(MinesweeperEvents.START, () => {
+        // Можно добавить дополнительную логику при старте игры
+        console.log('Игра началась!');
+    });
+
+    document.addEventListener(MinesweeperEvents.END, (e) => {
+        // Можно добавить дополнительную логику при завершении игры
+        const { won, time } = e.detail;
+        console.log(`Игра завершена! ${won ? 'Победа' : 'Поражение'} за ${time} секунд`);
+    });
 });
