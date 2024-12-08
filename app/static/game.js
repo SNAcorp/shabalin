@@ -527,7 +527,6 @@ class Minesweeper {
         }
     }
 
-
     hideStats() {
         this.statsModal.classList.remove('active');
         setTimeout(() => {
