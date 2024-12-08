@@ -13,19 +13,44 @@
         }
 
         .game-container {
-            max-width: 900px;
+            display: flex;
+            gap: 20px;
+            max-width: 1200px;
             margin: 0 auto;
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
         }
 
-        .game-board {
+        .tiles-area {
+            flex: 1;
+            min-height: 600px;
+            background-color: #eef4ff;
+            padding: 10px;
+            border-radius: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            align-content: flex-start;
+            gap: 5px;
+        }
+
+        .puzzle-grid {
+            width: 450px;
+            height: 300px;
+            background-color: #fff;
+            border: 2px solid #ccc;
             display: grid;
             grid-template-columns: repeat(9, 50px);
             grid-template-rows: repeat(6, 50px);
-            gap: 1px;
-            background-color: #ccc;
-            padding: 10px;
-            border-radius: 5px;
-            margin-bottom: 20px;
+            gap: 0;
+        }
+
+        .grid-cell {
+            width: 50px;
+            height: 50px;
+            border: 1px solid #e0e0e0;
+            background-color: #fff;
         }
 
         .tile {
@@ -33,7 +58,7 @@
             height: 50px;
             background-size: 450px 300px;
             border: 1px solid #999;
-            cursor: pointer;
+            cursor: move;
             transition: transform 0.2s;
         }
 
@@ -41,13 +66,18 @@
             transform: scale(1.05);
         }
 
-        .tile.selected {
-            border: 2px solid #ff0000;
+        .tile.dragging {
+            opacity: 0.5;
         }
 
         .controls {
-            text-align: center;
-            margin-bottom: 20px;
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 100;
+            display: flex;
+            gap: 10px;
         }
 
         button {
@@ -58,38 +88,30 @@
             color: white;
             border: none;
             border-radius: 5px;
-            margin: 0 10px;
         }
 
         button:hover {
             background-color: #45a049;
         }
 
-        .preview {
-            margin-top: 20px;
-            text-align: center;
+        .grid-cell.highlight {
+            background-color: #e3f2fd;
         }
 
-        .preview img {
-            max-width: 300px;
-            border: 2px solid #999;
-            border-radius: 5px;
+        .grid-cell.filled {
+            border: none;
         }
     </style>
 </head>
 <body>
+    <div class="controls">
+        <button id="newGame">Новая игра</button>
+        <button id="checkSolution">Проверить решение</button>
+    </div>
+
     <div class="game-container">
-        <div class="controls">
-            <button id="newGame">Новая игра</button>
-            <button id="checkSolution">Проверить решение</button>
-        </div>
-
-        <div class="game-board" id="gameBoard"></div>
-
-        <div class="preview">
-            <h3>Образец:</h3>
-            <img src="https://shabalin.sna.lol/static/puzzle.jpg" alt="Образец пазла">
-        </div>
+        <div class="tiles-area" id="tilesArea"></div>
+        <div class="puzzle-grid" id="puzzleGrid"></div>
     </div>
 
     <script src="https://shabalin.sna.lol/static/pgame.js"></script>

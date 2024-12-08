@@ -1,6 +1,7 @@
 class PuzzleGame {
     constructor() {
-        this.gameBoard = document.getElementById('gameBoard');
+        this.tilesArea = document.getElementById('tilesArea');
+        this.puzzleGrid = document.getElementById('puzzleGrid');
         this.newGameBtn = document.getElementById('newGame');
         this.checkSolutionBtn = document.getElementById('checkSolution');
 
@@ -8,9 +9,10 @@ class PuzzleGame {
         this.gridWidth = 9;
         this.gridHeight = 6;
         this.tiles = [];
-        this.selectedTile = null;
+        this.gridCells = [];
 
         this.initializeEventListeners();
+        this.createGrid();
         this.startNewGame();
     }
 
@@ -19,24 +21,72 @@ class PuzzleGame {
         this.checkSolutionBtn.addEventListener('click', () => this.checkSolution());
     }
 
+    createGrid() {
+        // Создаем пустую сетку
+        this.puzzleGrid.innerHTML = '';
+        this.gridCells = [];
+
+        for (let i = 0; i < this.gridHeight * this.gridWidth; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            cell.dataset.index = i;
+
+            this.setupGridCellEvents(cell);
+
+            this.gridCells.push(cell);
+            this.puzzleGrid.appendChild(cell);
+        }
+    }
+
+    setupGridCellEvents(cell) {
+        cell.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            cell.classList.add('highlight');
+        });
+
+        cell.addEventListener('dragleave', () => {
+            cell.classList.remove('highlight');
+        });
+
+        cell.addEventListener('drop', (e) => {
+            e.preventDefault();
+            cell.classList.remove('highlight');
+
+            const tileId = e.dataTransfer.getData('text/plain');
+            const tile = document.getElementById(tileId);
+
+            if (tile && !cell.hasChildNodes()) {
+                cell.appendChild(tile);
+                cell.classList.add('filled');
+            }
+        });
+    }
+
     async startNewGame() {
         try {
-            const response = await fetch('https://shabalin.sna.lol/api/game/new');
+            const response = await fetch('http://shabalin.sna.lol/api/game/new');
             const gameData = await response.json();
 
-            this.createBoard(gameData.grid);
+            this.createTiles(gameData.grid);
         } catch (error) {
             console.error('Ошибка при создании новой игры:', error);
         }
     }
 
-    createBoard(grid) {
-        this.gameBoard.innerHTML = '';
-        this.tiles = [];
+    createTiles(grid) {
+        // Очищаем области
+        this.tilesArea.innerHTML = '';
+        this.gridCells.forEach(cell => {
+            cell.innerHTML = '';
+            cell.classList.remove('filled');
+        });
 
+        // Создаем новые тайлы
         grid.forEach((position, index) => {
             const tile = document.createElement('div');
             tile.className = 'tile';
+            tile.id = `tile-${index}`;
+            tile.draggable = true;
 
             // Вычисляем позицию фонового изображения
             const originalX = (position % this.gridWidth) * this.tileSize;
@@ -45,40 +95,38 @@ class PuzzleGame {
             tile.style.backgroundImage = 'url("https://shabalin.sna.lol/static/puzzle.jpg")';
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
-            tile.addEventListener('click', () => this.handleTileClick(index));
+            this.setupTileEvents(tile);
 
             this.tiles.push(tile);
-            this.gameBoard.appendChild(tile);
+            this.tilesArea.appendChild(tile);
         });
     }
 
-    handleTileClick(index) {
-        if (this.selectedTile === null) {
-            // Выбираем первый тайл
-            this.tiles[index].classList.add('selected');
-            this.selectedTile = index;
-        } else {
-            // Меняем тайлы местами
-            this.swapTiles(this.selectedTile, index);
-            this.tiles[this.selectedTile].classList.remove('selected');
-            this.selectedTile = null;
-        }
-    }
+    setupTileEvents(tile) {
+        tile.addEventListener('dragstart', (e) => {
+            e.dataTransfer.setData('text/plain', tile.id);
+            tile.classList.add('dragging');
 
-    swapTiles(index1, index2) {
-        // Меняем местами фоновые позиции
-        const tempBackground = this.tiles[index1].style.backgroundPosition;
-        this.tiles[index1].style.backgroundPosition = this.tiles[index2].style.backgroundPosition;
-        this.tiles[index2].style.backgroundPosition = tempBackground;
+            // Если тайл находится в ячейке сетки, освобождаем ячейку
+            if (tile.parentElement.classList.contains('grid-cell')) {
+                tile.parentElement.classList.remove('filled');
+            }
+        });
+
+        tile.addEventListener('dragend', () => {
+            tile.classList.remove('dragging');
+        });
     }
 
     getCurrentGrid() {
-        return this.tiles.map(tile => {
+        return this.gridCells.map(cell => {
+            const tile = cell.firstChild;
+            if (!tile) return null;
+
             const [x, y] = tile.style.backgroundPosition
                 .split(' ')
                 .map(pos => parseInt(pos));
 
-            // Вычисляем оригинальную позицию тайла
             const col = Math.abs(x / this.tileSize);
             const row = Math.abs(y / this.tileSize);
 
@@ -87,15 +135,21 @@ class PuzzleGame {
     }
 
     async checkSolution() {
+        const grid = this.getCurrentGrid();
+
+        // Проверяем, все ли ячейки заполнены
+        if (grid.includes(null)) {
+            alert('Пожалуйста, заполните все ячейки сетки!');
+            return;
+        }
+
         try {
-            const response = await fetch('https://shabalin.sna.lol/api/game/check', {
+            const response = await fetch('http://shabalin.sna.lol/api/game/check', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
-                body: JSON.stringify({
-                    grid: this.getCurrentGrid()
-                })
+                body: JSON.stringify({ grid })
             });
 
             const result = await response.json();
