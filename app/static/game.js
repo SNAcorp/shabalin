@@ -495,24 +495,15 @@ class Minesweeper {
                             ${wins > 0 ? `<p>Лучшее время: ${bestTime} сек</p>` : ''}
                         </div>
                         <div class="stats-content">
-                            <table class="stats-table">
-                                <thead>
-                                    <tr>
-                                        <th>Дата</th>
-                                        <th>Результат</th>
-                                        <th>Время</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${stats.slice().reverse().map(game => `
-                                        <tr>
-                                            <td>${game.date}</td>
-                                            <td>${game.result}</td>
-                                            <td>${game.time} сек</td>
-                                        </tr>
-                                    `).join('')}
-                                </tbody>
-                            </table>
+                            <ul class="game-list">
+                                ${stats.slice().reverse().map(game => `
+                                    <li class="game-item">
+                                        <span class="game-date">${game.date}</span>
+                                        <span class="game-result ${game.result === 'Победа' ? 'win' : 'lose'}">${game.result}</span>
+                                        <span class="game-time">${game.time} сек</span>
+                                    </li>
+                                `).join('')}
+                            </ul>
                         </div>
                     </div>
                     <div class="modal-footer">
@@ -535,6 +526,7 @@ class Minesweeper {
             content.innerHTML = '<p>Ошибка при загрузке статистики</p>';
         }
     }
+
 
     hideStats() {
         this.statsModal.classList.remove('active');

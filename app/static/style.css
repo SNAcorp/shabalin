@@ -212,6 +212,53 @@ button:active {
     margin-bottom: 15px;
 }
 
+.game-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.game-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    border-bottom: 1px solid #eee;
+    transition: background-color 0.2s;
+}
+
+.game-item:hover {
+    background-color: #f8f9fa;
+}
+
+.game-item:last-child {
+    border-bottom: none;
+}
+
+.game-date {
+    flex: 2;
+    color: #666;
+}
+
+.game-result {
+    flex: 1;
+    text-align: center;
+}
+
+.game-result.win {
+    color: #2ecc71;
+}
+
+.game-result.lose {
+    color: #e74c3c;
+}
+
+.game-time {
+    flex: 1;
+    text-align: right;
+    color: #666;
+}
+
 .stats-content::-webkit-scrollbar {
     width: 6px;
 }
