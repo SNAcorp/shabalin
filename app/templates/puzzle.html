@@ -35,14 +35,43 @@
             font-weight: 700;
         }
 
+        .difficulty-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 24px;
+        }
+
+        .difficulty-btn {
+            padding: 12px 24px;
+            font-size: 1rem;
+            font-weight: 500;
+            border: 2px solid var(--primary-color);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background-color: transparent;
+            color: var(--primary-color);
+        }
+
+        .difficulty-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: var(--shadow);
+        }
+
+        .difficulty-btn.selected {
+            background-color: var(--primary-color);
+            color: white;
+        }
+
         .controls {
             display: flex;
             justify-content: center;
             gap: 12px;
-            margin-bottom: 20px;
+            margin: 20px 0;
         }
 
-        button {
+        .game-btn {
             padding: 12px 24px;
             font-size: 1rem;
             font-weight: 500;
@@ -54,7 +83,7 @@
             transition: all 0.2s ease;
         }
 
-        button:hover {
+        .game-btn:hover {
             background-color: var(--primary-hover);
             transform: translateY(-1px);
         }
@@ -169,9 +198,28 @@
             font-weight: 500;
         }
 
+        .timer {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary-color);
+            margin: 16px 0;
+        }
+
         @media (max-width: 1200px) {
             .game-container {
                 grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .difficulty-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .difficulty-btn {
+                width: 100%;
+                max-width: 200px;
             }
         }
     </style>
@@ -179,28 +227,18 @@
 <body>
     <div class="header">
         <h1>Собери пазл</h1>
-        <div class="difficulty-selector">
-            <div class="difficulty-card" data-difficulty="easy">
-                <img src="https://shabalin.sna.lol/static/epuzzle.jpg" alt="Легкий уровень">
-                <h3>Легкий</h3>
-                <p>Простой пейзаж с четкими элементами</p>
-            </div>
-            <div class="difficulty-card" data-difficulty="medium">
-                <img src="https://shabalin.sna.lol/static/puzzle.jpg" alt="Средний уровень">
-                <h3>Средний</h3>
-                <p>Городской пейзаж со множеством деталей</p>
-            </div>
-            <div class="difficulty-card" data-difficulty="hard">
-                <img src="https://shabalin.sna.lol/static/hpuzzle.jpg" alt="Сложный уровень">
-                <h3>Сложный</h3>
-                <p>Абстрактное изображение с похожими элементами</p>
-            </div>
+
+        <div class="difficulty-buttons">
+            <button class="difficulty-btn" data-difficulty="easy">Легкий</button>
+            <button class="difficulty-btn" data-difficulty="medium">Средний</button>
+            <button class="difficulty-btn" data-difficulty="hard">Сложный</button>
         </div>
 
         <div class="timer" id="timer">00:00</div>
+
         <div class="controls">
-            <button id="newGame">Новая игра</button>
-            <button id="checkSolution">Проверить решение</button>
+            <button class="game-btn" id="newGame">Новая игра</button>
+            <button class="game-btn" id="checkSolution">Проверить решение</button>
         </div>
     </div>
 
@@ -208,20 +246,20 @@
         <div class="game-container">
             <div class="tiles-area">
                 <div class="area-title">Доступные фрагменты</div>
+                <div class="preview-area">
+                    <h3>Итоговое изображение</h3>
+                    <img id="previewImage" src="/static/epuzzle.jpg" alt="Образец пазла">
+                </div>
                 <div class="tiles-container" id="tilesContainer"></div>
             </div>
 
             <div class="grid-area">
                 <div class="area-title">Игровое поле</div>
                 <div class="puzzle-grid" id="puzzleGrid"></div>
-                <div class="preview-area">
-                    <h3>Итоговое изображение</h3>
-                    <img src="https://shabalin.sna.lol/static/puzzle.jpg" alt="Образец пазла">
-                </div>
             </div>
         </div>
     </div>
 
-    <script src="https://shabalin.sna.lol/static/pgame.js"></script>
+    <script src="/static/pgame.js"></script>
 </body>
 </html>
