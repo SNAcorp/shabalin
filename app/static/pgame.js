@@ -147,7 +147,7 @@ class PuzzleGame {
             this.togglePreviewBtn.textContent = 'Скрыть подсказку';
             this.togglePreviewBtn.classList.add('active');
         } else {
-            this.puzzleBackground.style.opacity = '0';
+            this.puzzleBackground.style.opacity = '1';
             setTimeout(() => {
                 this.puzzleBackground.style.display = 'none';
             }, 300);
