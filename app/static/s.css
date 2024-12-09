@@ -8,7 +8,6 @@
 /* Tiles section */
 .tiles-section {
     min-width: 300px;
-    max-width: 400px;
 }
 
 .tiles-container {
@@ -37,6 +36,10 @@
     display: flex;
     gap: 10px;
     margin-bottom: 10px;
+}
+
+.puzzle-cell {
+    opacity: 0.8;
 }
 
 /* Buttons */
@@ -141,7 +144,6 @@
     user-select: none;
     border: 1px solid #ccc;
     box-sizing: border-box;
-    opacity: 50%;
 }
 
 .tile.dragging {
