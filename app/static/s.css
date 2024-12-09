@@ -91,7 +91,6 @@
     height: 300px;
     border: 1px solid #ccc;
     background: #fff;
-    opacity: 0.5;
 }
 
 .puzzle-grid {
@@ -102,10 +101,6 @@
     gap: 1px;
     background: #ccc;
     z-index: 2;
-}
-
-.puzzle-cell {
-    opacity: 0.8;
 }
 
 .grid-cell {
