@@ -123,7 +123,7 @@ class PuzzleGame {
                 this.previewImage.style.display = 'block';
                 this.togglePreviewBtn.textContent = 'Скрыть подсказку';
                 this.togglePreviewBtn.classList.add('active');
-                // this.previewImageBack.classList.add('active');
+                this.previewImageBack.classList.add('active');
             } else {
                 this.previewImageBack.classList.add('active');
                 this.previewImage.style.display = 'none';
