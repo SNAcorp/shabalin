@@ -100,7 +100,7 @@ class PuzzleGame {
         this.isGameActive = true;
 
         try {
-            const response = await fetch(`ht/api/game/new?difficulty=${this.currentDifficulty}`);
+            const response = await fetch(`/api/game/new?difficulty=${this.currentDifficulty}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -129,7 +129,7 @@ class PuzzleGame {
             const originalY = Math.floor(position / this.gridWidth) * this.tileSize;
 
             // Устанавливаем фоновое изображение
-            tile.style.backgroundImage = `url('/static/images/puzzle_${this.currentDifficulty}.jpg')`;
+            tile.style.backgroundImage = `url('/static/images/${this.currentDifficulty}puzzle.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
             tile.dataset.correctPosition = position;
