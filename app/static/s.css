@@ -113,11 +113,11 @@
     background: #fff;
     border: 1px solid #ddd;
     box-sizing: border-box;
-    opacity: 0.8;
 }
 
 .grid-cell.highlight {
     background-color: rgba(144, 238, 144, 0.5);
+    opacity: 0.8;
 }
 
 /* Background and tiles */
