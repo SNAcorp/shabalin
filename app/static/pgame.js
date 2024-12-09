@@ -1,36 +1,57 @@
 class PuzzleGame {
     constructor() {
-        // DOM элементы
-        this.availableTiles = document.getElementById('availableTiles');
-        this.puzzleGrid = document.getElementById('puzzleGrid');
-        this.newGameBtn = document.getElementById('newGame');
-        this.checkBtn = document.getElementById('checkSolution');
-        this.timer = document.getElementById('timer');
-        this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
+        this.init();
+    }
 
-        // Проверяем, что все элементы найдены
-        if (!this.availableTiles || !this.puzzleGrid || !this.newGameBtn ||
-            !this.checkBtn || !this.timer) {
-            console.error('Не удалось найти все необходимые элементы на странице');
-            return;
+    init() {
+        try {
+            // Инициализация DOM элементов
+            this.initializeElements();
+
+            // Базовые настройки
+            this.settings = {
+                tileSize: 50,
+                gridWidth: 9,
+                gridHeight: 6,
+                currentDifficulty: 'e'
+            };
+
+            // Состояние игры
+            this.state = {
+                tiles: [],
+                gridCells: [],
+                draggedTile: null,
+                timerInterval: null,
+                startTime: null,
+                isGameActive: false
+            };
+
+            // Запуск игры
+            this.initializeGame();
+        } catch (error) {
+            console.error('Ошибка инициализации игры:', error);
         }
+    }
 
-        // Конфигурация
-        this.tileSize = 50;
-        this.gridWidth = 9;
-        this.gridHeight = 6;
-        this.currentDifficulty = 'e';
+    initializeElements() {
+        // Инициализация элементов с проверками
+        this.elements = {
+            tiles: document.getElementById('availableTiles'),
+            grid: document.getElementById('puzzleGrid'),
+            newGame: document.getElementById('newGame'),
+            check: document.getElementById('checkSolution'),
+            timer: document.getElementById('timer'),
+            difficultyBtns: document.querySelectorAll('.difficulty-btn')
+        };
 
-        // Состояние игры
-        this.tiles = [];
-        this.gridCells = [];
-        this.draggedTile = null;
-        this.timerInterval = null;
-        this.startTime = null;
-        this.isGameActive = false;
+        // Проверка наличия всех необходимых элементов
+        const missingElements = Object.entries(this.elements)
+            .filter(([key, element]) => !element && key !== 'difficultyBtns')
+            .map(([key]) => key);
 
-        // Инициализация
-        this.initializeGame();
+        if (missingElements.length > 0) {
+            throw new Error(`Отсутствуют элементы: ${missingElements.join(', ')}`);
+        }
     }
 
     initializeGame() {
@@ -40,190 +61,213 @@ class PuzzleGame {
     }
 
     setupEventListeners() {
-        this.newGameBtn.addEventListener('click', () => this.startNewGame());
-        this.checkBtn.addEventListener('click', () => this.checkSolution());
+        // Обработчики для кнопок
+        this.elements.newGame.addEventListener('click', () => this.startNewGame());
+        this.elements.check.addEventListener('click', () => this.checkSolution());
 
-        this.difficultyBtns.forEach(btn => {
+        // Обработчики для кнопок сложности
+        this.elements.difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
-                if (this.isGameActive && !confirm('Начать новую игру?')) {
-                    return;
+                if (this.state.isGameActive) {
+                    const shouldRestart = window.confirm('Начать новую игру?');
+                    if (!shouldRestart) return;
                 }
-                this.difficultyBtns.forEach(b => b.classList.remove('selected'));
+
+                this.elements.difficultyBtns.forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
-                this.currentDifficulty = btn.dataset.difficulty;
+                this.settings.currentDifficulty = btn.dataset.difficulty;
                 this.startNewGame();
             });
         });
 
-        // Предотвращаем стандартное поведение drag&drop на сетке
-        this.puzzleGrid.addEventListener('dragover', (e) => {
-            e.preventDefault();
-        });
+        // Обработчик для сетки
+        this.elements.grid.addEventListener('dragover', (e) => e.preventDefault());
     }
 
     createGrid() {
-        this.puzzleGrid.innerHTML = '';
-        this.gridCells = [];
+        const { gridWidth, gridHeight } = this.settings;
+        this.elements.grid.innerHTML = '';
+        this.state.gridCells = [];
 
-        for (let i = 0; i < this.gridHeight * this.gridWidth; i++) {
+        const totalCells = gridWidth * gridHeight;
+
+        for (let i = 0; i < totalCells; i++) {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
             cell.dataset.index = i;
 
-            cell.addEventListener('dragover', e => {
-                e.preventDefault();
-                cell.classList.add('highlight');
-            });
+            // Обработчики для drag&drop
+            this.setupCellDragAndDrop(cell);
 
-            cell.addEventListener('dragleave', () => {
-                cell.classList.remove('highlight');
-            });
-
-            cell.addEventListener('drop', e => {
-                e.preventDefault();
-                cell.classList.remove('highlight');
-
-                if (this.draggedTile && !cell.hasChildNodes()) {
-                    cell.appendChild(this.draggedTile);
-                    this.draggedTile = null;
-                    this.checkAutoComplete();
-                }
-            });
-
-            this.gridCells.push(cell);
-            this.puzzleGrid.appendChild(cell);
+            this.state.gridCells.push(cell);
+            this.elements.grid.appendChild(cell);
         }
+    }
+
+    setupCellDragAndDrop(cell) {
+        cell.addEventListener('dragover', e => {
+            e.preventDefault();
+            cell.classList.add('highlight');
+        });
+
+        cell.addEventListener('dragleave', () => {
+            cell.classList.remove('highlight');
+        });
+
+        cell.addEventListener('drop', e => {
+            e.preventDefault();
+            cell.classList.remove('highlight');
+
+            if (this.state.draggedTile && !cell.hasChildNodes()) {
+                cell.appendChild(this.state.draggedTile);
+                this.state.draggedTile = null;
+                this.checkAutoComplete();
+            }
+        });
     }
 
     async startNewGame() {
-        this.stopTimer();
-        this.isGameActive = true;
-
         try {
-            const response = await fetch(`/api/game/new?difficulty=${this.currentDifficulty}`);
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            this.stopTimer();
+            this.state.isGameActive = true;
+
+            const response = await fetch(`/api/game/new?difficulty=${this.settings.currentDifficulty}`);
+            if (!response.ok) throw new Error('Ошибка сервера');
+
             const gameData = await response.json();
-            this.createTiles(gameData.grid);
+            await this.createTiles(gameData.grid);
             this.startTimer();
         } catch (error) {
-            console.error('Error starting new game:', error);
-            alert('Ошибка при создании новой игры. Попробуйте еще раз.');
-            this.isGameActive = false;
+            console.error('Ошибка запуска новой игры:', error);
+            alert('Не удалось начать новую игру. Попробуйте еще раз.');
+            this.state.isGameActive = false;
         }
     }
 
-    createTiles(grid) {
-        this.availableTiles.innerHTML = '';
-        this.gridCells.forEach(cell => cell.innerHTML = '');
-        this.tiles = [];
+    async createTiles(grid) {
+        try {
+            const { tileSize, gridWidth } = this.settings;
+            this.elements.tiles.innerHTML = '';
+            this.state.gridCells.forEach(cell => cell.innerHTML = '');
+            this.state.tiles = [];
 
-        grid.forEach((position, index) => {
-            const tile = document.createElement('div');
-            tile.className = 'tile';
-            tile.draggable = true;
+            grid.forEach((position, index) => {
+                const tile = document.createElement('div');
+                tile.className = 'tile';
+                tile.draggable = true;
 
-            // Вычисляем позицию в изображении
-            const originalX = (position % this.gridWidth) * this.tileSize;
-            const originalY = Math.floor(position / this.gridWidth) * this.tileSize;
+                // Позиция в изображении
+                const originalX = (position % gridWidth) * tileSize;
+                const originalY = Math.floor(position / gridWidth) * tileSize;
 
-            // Устанавливаем фоновое изображение
-            tile.style.backgroundImage = `url('/static/${this.currentDifficulty}puzzle.jpg')`;
-            tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
+                // Установка фона
+                tile.style.backgroundImage = `url('/static/${this.settings.currentDifficulty}puzzle.jpg')`;
+                tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
-            tile.dataset.correctPosition = position;
+                tile.dataset.correctPosition = position;
 
-            tile.addEventListener('dragstart', () => {
-                this.draggedTile = tile;
-                tile.classList.add('dragging');
+                // Обработчики перетаскивания
+                this.setupTileDragAndDrop(tile);
+
+                this.state.tiles.push(tile);
+                this.elements.tiles.appendChild(tile);
             });
+        } catch (error) {
+            console.error('Ошибка создания тайлов:', error);
+            throw error;
+        }
+    }
 
-            tile.addEventListener('dragend', () => {
-                tile.classList.remove('dragging');
-                this.draggedTile = null;
-            });
+    setupTileDragAndDrop(tile) {
+        tile.addEventListener('dragstart', () => {
+            this.state.draggedTile = tile;
+            tile.classList.add('dragging');
+        });
 
-            this.tiles.push(tile);
-            this.availableTiles.appendChild(tile);
+        tile.addEventListener('dragend', () => {
+            tile.classList.remove('dragging');
+            this.state.draggedTile = null;
         });
     }
 
     startTimer() {
         this.stopTimer();
-        this.startTime = Date.now();
-        this.timerInterval = setInterval(() => this.updateTimer(), 1000);
+        this.state.startTime = Date.now();
+        this.state.timerInterval = setInterval(() => this.updateTimer(), 1000);
     }
 
     stopTimer() {
-        if (this.timerInterval) {
-            clearInterval(this.timerInterval);
-            this.timerInterval = null;
+        if (this.state.timerInterval) {
+            clearInterval(this.state.timerInterval);
+            this.state.timerInterval = null;
         }
     }
 
     updateTimer() {
-        if (!this.startTime) return;
+        if (!this.state.startTime) return;
 
-        const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+        const elapsed = Math.floor((Date.now() - this.state.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
         const seconds = (elapsed % 60).toString().padStart(2, '0');
-        this.timer.textContent = `${minutes}:${seconds}`;
+        this.elements.timer.textContent = `${minutes}:${seconds}`;
     }
 
     getCurrentState() {
-        return this.gridCells.map(cell => {
+        return this.state.gridCells.map(cell => {
             const tile = cell.firstChild;
             return tile ? parseInt(tile.dataset.correctPosition) : null;
         });
     }
 
     checkAutoComplete() {
-        const isGridFull = this.gridCells.every(cell => cell.hasChildNodes());
+        const isGridFull = this.state.gridCells.every(cell => cell.hasChildNodes());
         if (isGridFull) {
             this.checkSolution();
         }
     }
 
     async checkSolution() {
-        const currentState = this.getCurrentState();
-
-        if (currentState.includes(null)) {
-            alert('Заполните все ячейки!');
-            return;
-        }
-
         try {
+            const currentState = this.getCurrentState();
+
+            if (currentState.includes(null)) {
+                alert('Заполните все ячейки!');
+                return;
+            }
+
             const response = await fetch('/api/game/check', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     grid: currentState,
-                    difficulty: this.currentDifficulty
+                    difficulty: this.settings.currentDifficulty
                 })
             });
 
-            if (!response.ok) {
-                throw new Error('Network response was not ok');
-            }
+            if (!response.ok) throw new Error('Ошибка сервера');
 
             const result = await response.json();
 
             if (result.solved) {
                 this.stopTimer();
-                this.isGameActive = false;
-                alert(`Поздравляем! Вы собрали пазл за ${this.timer.textContent}!`);
+                this.state.isGameActive = false;
+                alert(`Поздравляем! Вы собрали пазл за ${this.elements.timer.textContent}!`);
             } else {
                 alert('Пока не верно. Попробуйте еще!');
             }
         } catch (error) {
-            console.error('Error checking solution:', error);
-            alert('Ошибка при проверке решения. Попробуйте еще раз.');
+            console.error('Ошибка проверки решения:', error);
+            alert('Не удалось проверить решение. Попробуйте еще раз.');
         }
     }
 }
 
-// Инициализация игры при загрузке страницы
+// Запуск игры после загрузки DOM
 document.addEventListener('DOMContentLoaded', () => {
-    new PuzzleGame();
+    try {
+        new PuzzleGame();
+    } catch (error) {
+        console.error('Ошибка запуска игры:', error);
+        alert('Не удалось запустить игру. Пожалуйста, обновите страницу.');
+    }
 });
