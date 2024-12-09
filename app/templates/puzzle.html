@@ -7,6 +7,21 @@
     <link rel="stylesheet" href="https://shabalin.sna.lol/static/s.css">
 </head>
 <body>
+    <div class="controls">
+        <div class="difficulty-buttons">
+            <button class="difficulty-btn selected" data-difficulty="e">Легкий</button>
+            <button class="difficulty-btn" data-difficulty="m">Средний</button>
+            <button class="difficulty-btn" data-difficulty="h">Сложный</button>
+        </div>
+
+        <div class="game-controls">
+            <button id="newGame" class="control-btn">Новая игра</button>
+            <button id="checkSolution" class="control-btn">Проверить</button>
+            <button id="togglePreview" class="preview-button">Показать подсказку</button>
+        </div>
+
+        <div id="timer" class="timer">00:00</div>
+    </div>
     <div class="game-wrapper">
         <div class="tiles-section">
             <h2>Пазлы</h2>
@@ -16,21 +31,7 @@
         </div>
 
         <div class="grid-and-preview">
-            <div class="controls">
-                <div class="difficulty-buttons">
-                    <button class="difficulty-btn selected" data-difficulty="e">Легкий</button>
-                    <button class="difficulty-btn" data-difficulty="m">Средний</button>
-                    <button class="difficulty-btn" data-difficulty="h">Сложный</button>
-                </div>
 
-                <div class="game-controls">
-                    <button id="newGame" class="control-btn">Новая игра</button>
-                    <button id="checkSolution" class="control-btn">Проверить</button>
-                    <button id="togglePreview" class="preview-button">Показать подсказку</button>
-                </div>
-
-                <div id="timer" class="timer">00:00</div>
-            </div>
 
             <div class="grid-container">
                 <div id="puzzleGrid" class="puzzle-grid">
