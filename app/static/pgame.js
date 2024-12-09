@@ -1,6 +1,5 @@
 class PuzzleGame {
     constructor() {
-        // Инициализация после загрузки DOM
         this.initElements();
         if (this.elementsLoaded) {
             this.initGame();
@@ -17,9 +16,15 @@ class PuzzleGame {
             this.timerDisplay = document.getElementById('timer');
             this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
 
+            // Новые элементы для превью
+            this.togglePreviewBtn = document.getElementById('togglePreview');
+            this.previewSection = document.getElementById('previewSection');
+            this.previewImage = document.getElementById('previewImage');
+
             // Проверяем наличие всех элементов
             if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
-                !this.checkBtn || !this.timerDisplay) {
+                !this.checkBtn || !this.timerDisplay || !this.togglePreviewBtn ||
+                !this.previewSection || !this.previewImage) {
                 throw new Error('Не найдены необходимые элементы DOM');
             }
 
@@ -40,13 +45,14 @@ class PuzzleGame {
 
         // Состояние игры
         this.state = {
-            currentDifficulty: 'e',  // Значение по умолчанию
+            currentDifficulty: 'e',
             tiles: [],
             gridCells: [],
             draggedTile: null,
             timerInterval: null,
             startTime: null,
-            isGameActive: false
+            isGameActive: false,
+            previewVisible: false
         };
 
         // Инициализация игры
@@ -55,9 +61,13 @@ class PuzzleGame {
         this.startNewGame();
     }
 
+
     setupEventListeners() {
         this.newGameBtn.addEventListener('click', () => this.startNewGame());
         this.checkBtn.addEventListener('click', () => this.checkSolution());
+
+        // Добавляем обработчик для кнопки превью
+        this.togglePreviewBtn.addEventListener('click', () => this.togglePreview());
 
         this.difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -110,6 +120,13 @@ class PuzzleGame {
         }
     }
 
+    togglePreview() {
+        this.state.previewVisible = !this.state.previewVisible;
+        this.previewSection.style.display = this.state.previewVisible ? 'block' : 'none';
+        this.togglePreviewBtn.textContent = this.state.previewVisible ? 'Скрыть картинку' : 'Показать картинку';
+    }
+
+
     async startNewGame() {
         try {
             this.stopTimer();
@@ -126,6 +143,9 @@ class PuzzleGame {
                 throw new Error('Некорректные данные от сервера');
             }
 
+            // Обновляем превью изображение
+            this.updatePreviewImage();
+
             this.createTiles(gameData.grid);
             this.startTimer();
         } catch (error) {
@@ -133,6 +153,11 @@ class PuzzleGame {
             this.state.isGameActive = false;
             alert('Не удалось начать новую игру: ' + error.message);
         }
+    }
+
+    updatePreviewImage() {
+        // Обновляем источник изображения в соответствии с текущей сложностью
+        this.previewImage.src = `/static/${this.state.currentDifficulty}puzzle.jpg`;
     }
 
     createTiles(grid) {
