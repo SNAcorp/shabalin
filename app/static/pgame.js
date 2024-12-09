@@ -35,7 +35,9 @@ class PuzzleGame {
         this.config = {
             tileSize: 50,
             gridWidth: 9,
-            gridHeight: 6
+            gridHeight: 6,
+            totalWidth: 450,  // 9 * 50
+            totalHeight: 300  // 6 * 50
         };
 
         this.state = {
@@ -113,13 +115,7 @@ class PuzzleGame {
     setupEventListeners() {
         this.newGameBtn.addEventListener('click', () => this.startNewGame());
         this.checkBtn.addEventListener('click', () => this.checkSolution());
-
-        this.togglePreviewBtn.addEventListener('click', () => {
-            this.state.isPreviewVisible = !this.state.isPreviewVisible;
-            this.puzzleBackground.style.display = this.state.isPreviewVisible ? 'block' : 'none';
-            this.togglePreviewBtn.textContent = this.state.isPreviewVisible ? 'Скрыть подсказку' : 'Показать подсказку';
-            this.togglePreviewBtn.classList.toggle('active', this.state.isPreviewVisible);
-        });
+        this.togglePreviewBtn.addEventListener('click', () => this.togglePreview());
 
         this.difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -136,13 +132,29 @@ class PuzzleGame {
         });
     }
 
+    togglePreview() {
+        this.state.isPreviewVisible = !this.state.isPreviewVisible;
+
+        if (this.state.isPreviewVisible) {
+            this.puzzleBackground.style.display = 'block';
+            this.puzzleBackground.style.opacity = '0.3';
+            this.togglePreviewBtn.textContent = 'Скрыть подсказку';
+            this.togglePreviewBtn.classList.add('active');
+        } else {
+            this.puzzleBackground.style.opacity = '0';
+            setTimeout(() => {
+                this.puzzleBackground.style.display = 'none';
+            }, 300);
+            this.togglePreviewBtn.textContent = 'Показать подсказку';
+            this.togglePreviewBtn.classList.remove('active');
+        }
+    }
+
     async startNewGame() {
         try {
             this.stopTimer();
             this.state.isGameActive = true;
-
             this.availableTiles.innerHTML = '';
-            this.updateBackgroundImage();
 
             const response = await fetch('https://shabalin.sna.lol/api/game/new');
             if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
@@ -152,6 +164,10 @@ class PuzzleGame {
                 throw new Error('Некорректные данные от сервера');
             }
 
+            // Обновляем фоновое изображение
+            this.updateBackgroundImage();
+
+            // Создаем плитки
             this.createTiles(gameData.grid);
             this.startTimer();
         } catch (error) {
@@ -164,11 +180,11 @@ class PuzzleGame {
     updateBackgroundImage() {
         const imagePath = `/static/${this.state.currentDifficulty}puzzle.jpg`;
         this.puzzleBackground.style.backgroundImage = `url('${imagePath}')`;
-        this.puzzleBackground.style.backgroundSize = '450px 300px';
 
         // Сбрасываем состояние подсказки
         this.state.isPreviewVisible = false;
         this.puzzleBackground.style.display = 'none';
+        this.puzzleBackground.style.opacity = '0';
         this.togglePreviewBtn.textContent = 'Показать подсказку';
         this.togglePreviewBtn.classList.remove('active');
     }

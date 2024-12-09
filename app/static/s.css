@@ -1,43 +1,8 @@
-/* General layout */
 .game-wrapper {
     display: flex;
     gap: 20px;
     padding: 20px;
     font-family: Arial, sans-serif;
-}
-
-/* Controls section */
-.controls {
-    margin-bottom: 20px;
-}
-
-.control-btn, .difficulty-btn, .preview-button {
-    padding: 8px 16px;
-    margin: 0 5px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    background-color: #4CAF50;
-    color: white;
-    transition: background-color 0.3s;
-}
-
-.control-btn:hover, .difficulty-btn:hover, .preview-button:hover {
-    background-color: #45a049;
-}
-
-.difficulty-btn.selected {
-    background-color: #2196F3;
-}
-
-.preview-button.active {
-    background-color: #f44336;
-}
-
-.timer {
-    margin-top: 10px;
-    font-size: 1.2em;
-    font-weight: bold;
 }
 
 /* Tiles section */
@@ -53,15 +18,79 @@
     display: flex;
     flex-wrap: wrap;
     gap: 5px;
+    background: #f5f5f5;
 }
 
-/* Grid section */
+/* Controls */
+.controls {
+    margin-bottom: 20px;
+}
+
+.game-controls {
+    display: flex;
+    gap: 10px;
+    margin: 10px 0;
+}
+
+.difficulty-buttons {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+/* Buttons */
+.control-btn, .difficulty-btn, #togglePreview {
+    padding: 8px 16px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    color: white;
+    font-size: 14px;
+    transition: background-color 0.3s ease;
+}
+
+.control-btn, .difficulty-btn {
+    background-color: #4CAF50;
+}
+
+.control-btn:hover, .difficulty-btn:hover {
+    background-color: #45a049;
+}
+
+#togglePreview {
+    background-color: #2196F3;
+}
+
+#togglePreview:hover {
+    background-color: #1976D2;
+}
+
+#togglePreview.active {
+    background-color: #F44336;
+}
+
+#togglePreview.active:hover {
+    background-color: #D32F2F;
+}
+
+.difficulty-btn.selected {
+    background-color: #2196F3;
+}
+
+.timer {
+    font-size: 20px;
+    font-weight: bold;
+    text-align: center;
+    margin: 10px 0;
+}
+
+/* Grid */
 .grid-container {
     position: relative;
     width: 450px;
     height: 300px;
-    background: #fff;
     border: 1px solid #ccc;
+    background: #fff;
 }
 
 .puzzle-grid {
@@ -79,39 +108,38 @@
     height: 50px;
     background: #fff;
     border: 1px solid #ddd;
-    display: flex;
-    justify-content: center;
-    align-items: center;
+    box-sizing: border-box;
 }
 
 .grid-cell.highlight {
     background-color: rgba(144, 238, 144, 0.5);
 }
 
-/* Puzzle background */
+/* Background and tiles */
 .puzzle-background {
     position: absolute;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
+    width: 450px;
+    height: 300px;
     z-index: 1;
     opacity: 0.3;
     pointer-events: none;
-    background-size: 100% 100%;
+    background-size: 450px 300px;
     background-repeat: no-repeat;
     background-position: center;
+    transition: opacity 0.3s ease;
     display: none;
 }
 
-/* Tiles */
 .tile {
     width: 50px;
     height: 50px;
     cursor: grab;
+    background-size: 450px 300px;
     user-select: none;
+    border: 1px solid #ccc;
     box-sizing: border-box;
-    border: 1px solid #999;
 }
 
 .tile.dragging {
