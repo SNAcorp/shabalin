@@ -11,12 +11,11 @@ class PuzzleGame {
             // Получаем все необходимые DOM элементы
             this.puzzleGrid = document.getElementById('puzzleGrid');
             this.availableTiles = document.getElementById('availableTiles');
+            this.puzzleBackground = document.getElementById('puzzleBackground');
             this.newGameBtn = document.getElementById('newGame');
             this.checkBtn = document.getElementById('checkSolution');
             this.timerDisplay = document.getElementById('timer');
             this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
-
-            // Новые элементы для превью
             this.togglePreviewBtn = document.getElementById('togglePreview');
             this.previewSection = document.getElementById('previewSection');
             this.previewImage = document.getElementById('previewImage');
@@ -24,7 +23,7 @@ class PuzzleGame {
             // Проверяем наличие всех элементов
             if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
                 !this.checkBtn || !this.timerDisplay || !this.togglePreviewBtn ||
-                !this.previewSection || !this.previewImage) {
+                !this.previewSection || !this.previewImage || !this.puzzleBackground) {
                 throw new Error('Не найдены необходимые элементы DOM');
             }
 
@@ -55,18 +54,75 @@ class PuzzleGame {
             previewVisible: false
         };
 
-        // Инициализация игры
+        // Делаем availableTiles принимающим перетаскиваемые элементы
+        this.availableTiles.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            this.availableTiles.classList.add('highlight');
+        });
+
+        this.availableTiles.addEventListener('dragleave', () => {
+            this.availableTiles.classList.remove('highlight');
+        });
+
+        this.availableTiles.addEventListener('drop', (e) => {
+            e.preventDefault();
+            this.availableTiles.classList.remove('highlight');
+
+            if (this.state.draggedTile && this.state.draggedTile.parentElement !== this.availableTiles) {
+                this.availableTiles.appendChild(this.state.draggedTile);
+                this.state.draggedTile = null;
+            }
+        });
+
         this.createGrid();
         this.setupEventListeners();
         this.startNewGame();
     }
 
 
+    setupCellEventListeners(cell) {
+        cell.addEventListener('dragover', e => {
+            e.preventDefault();
+            cell.classList.add('highlight');
+        });
+
+        cell.addEventListener('dragleave', () => {
+            cell.classList.remove('highlight');
+        });
+
+        cell.addEventListener('drop', e => {
+            e.preventDefault();
+            cell.classList.remove('highlight');
+
+            if (this.state.draggedTile && !cell.hasChildNodes()) {
+                cell.appendChild(this.state.draggedTile);
+                this.state.draggedTile = null;
+                this.checkAutoComplete();
+            }
+        });
+    }
+
+    createGrid() {
+        this.puzzleGrid.innerHTML = '';
+        this.state.gridCells = [];
+
+        const totalCells = this.config.gridHeight * this.config.gridWidth;
+
+        for (let i = 0; i < totalCells; i++) {
+            const cell = document.createElement('div');
+            cell.className = 'grid-cell';
+            cell.dataset.index = i;
+
+            this.setupCellEventListeners(cell);
+
+            this.state.gridCells.push(cell);
+            this.puzzleGrid.appendChild(cell);
+        }
+    }
+
     setupEventListeners() {
         this.newGameBtn.addEventListener('click', () => this.startNewGame());
         this.checkBtn.addEventListener('click', () => this.checkSolution());
-
-        // Добавляем обработчик для кнопки превью
         this.togglePreviewBtn.addEventListener('click', () => this.togglePreview());
 
         this.difficultyBtns.forEach(btn => {
@@ -84,41 +140,6 @@ class PuzzleGame {
         });
     }
 
-    createGrid() {
-        this.puzzleGrid.innerHTML = '';
-        this.state.gridCells = [];
-
-        const totalCells = this.config.gridHeight * this.config.gridWidth;
-
-        for (let i = 0; i < totalCells; i++) {
-            const cell = document.createElement('div');
-            cell.className = 'grid-cell';
-            cell.dataset.index = i;
-
-            cell.addEventListener('dragover', e => {
-                e.preventDefault();
-                cell.classList.add('highlight');
-            });
-
-            cell.addEventListener('dragleave', () => {
-                cell.classList.remove('highlight');
-            });
-
-            cell.addEventListener('drop', e => {
-                e.preventDefault();
-                cell.classList.remove('highlight');
-
-                if (this.state.draggedTile && !cell.hasChildNodes()) {
-                    cell.appendChild(this.state.draggedTile);
-                    this.state.draggedTile = null;
-                    this.checkAutoComplete();
-                }
-            });
-
-            this.state.gridCells.push(cell);
-            this.puzzleGrid.appendChild(cell);
-        }
-    }
 
     togglePreview() {
         this.state.previewVisible = !this.state.previewVisible;
@@ -132,8 +153,9 @@ class PuzzleGame {
             this.stopTimer();
             this.state.isGameActive = true;
 
-            // Очищаем контейнер тайлов перед запросом
+            // Очищаем контейнер тайлов и обновляем фоновое изображение
             this.availableTiles.innerHTML = '';
+            this.updateBackgroundImage();
 
             const response = await fetch('https://shabalin.sna.lol/api/game/new');
             if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
@@ -142,9 +164,6 @@ class PuzzleGame {
             if (!gameData || !gameData.grid) {
                 throw new Error('Некорректные данные от сервера');
             }
-
-            // Обновляем превью изображение
-            this.updatePreviewImage();
 
             this.createTiles(gameData.grid);
             this.startTimer();
@@ -155,12 +174,15 @@ class PuzzleGame {
         }
     }
 
-    updatePreviewImage() {
-        // Обновляем источник изображения в соответствии с текущей сложностью
-        this.previewImage.src = `/static/${this.state.currentDifficulty}puzzle.jpg`;
+    updateBackgroundImage() {
+        const imagePath = `/static/${this.state.currentDifficulty}puzzle.jpg`;
+        this.puzzleBackground.style.backgroundImage = `url('${imagePath}')`;
+        this.previewImage.src = imagePath;
     }
 
     createTiles(grid) {
+        const { tileSize, gridWidth } = this.config;
+
         // Очищаем контейнеры
         this.availableTiles.innerHTML = '';
         this.state.gridCells.forEach(cell => cell.innerHTML = '');
@@ -172,8 +194,8 @@ class PuzzleGame {
             tile.className = 'tile';
             tile.draggable = true;
 
-            const originalX = (position % this.config.gridWidth) * this.config.tileSize;
-            const originalY = Math.floor(position / this.config.gridWidth) * this.config.tileSize;
+            const originalX = (position % gridWidth) * tileSize;
+            const originalY = Math.floor(position / gridWidth) * tileSize;
 
             tile.style.backgroundImage = `url('/static/${this.state.currentDifficulty}puzzle.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
@@ -186,7 +208,9 @@ class PuzzleGame {
 
             tile.addEventListener('dragend', () => {
                 tile.classList.remove('dragging');
-                this.state.draggedTile = null;
+                if (!tile.parentElement || tile.parentElement === this.availableTiles) {
+                    this.state.draggedTile = null;
+                }
             });
 
             this.state.tiles.push(tile);
