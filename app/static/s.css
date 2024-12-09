@@ -140,6 +140,7 @@
     user-select: none;
     border: 1px solid #ccc;
     box-sizing: border-box;
+    opacity: 50%;
 }
 
 .tile.dragging {
