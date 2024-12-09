@@ -1,15 +1,20 @@
 class PuzzleGame {
     constructor() {
-        this.initElements();
+        // Сначала инициализируем элементы
+        this.elementsLoaded = this.initElements();
+
+        // Только если элементы успешно загружены, инициализируем игру
         if (this.elementsLoaded) {
             this.initGame();
+        } else {
+            console.error('Не удалось инициализировать игру: отсутствуют необходимые элементы DOM');
         }
     }
 
     initElements() {
         try {
             // Получаем все необходимые DOM элементы
-            const elements = {
+            this.elements = {
                 availableTiles: document.getElementById('availableTiles'),
                 puzzleGrid: document.getElementById('puzzleGrid'),
                 newGameBtn: document.getElementById('newGame'),
@@ -18,24 +23,19 @@ class PuzzleGame {
                 difficultyBtns: document.querySelectorAll('.difficulty-btn')
             };
 
-            // Проверяем наличие всех элементов
-            const missingElements = [];
-            for (const [key, element] of Object.entries(elements)) {
-                if (!element && key !== 'difficultyBtns') {
-                    missingElements.push(key);
-                }
-            }
+            // Проверяем наличие всех обязательных элементов
+            const requiredElements = ['availableTiles', 'puzzleGrid', 'newGameBtn', 'checkBtn', 'timerDisplay'];
+            const missingElements = requiredElements.filter(key => !this.elements[key]);
 
             if (missingElements.length > 0) {
-                throw new Error(`Не найдены следующие элементы: ${missingElements.join(', ')}`);
+                console.error(`Не найдены следующие элементы: ${missingElements.join(', ')}`);
+                return false;
             }
 
-            // Если все элементы найдены, сохраняем их
-            this.elements = elements;
-            this.elementsLoaded = true;
+            return true;
         } catch (error) {
             console.error('Ошибка инициализации элементов:', error);
-            this.elementsLoaded = false;
+            return false;
         }
     }
 
@@ -49,7 +49,7 @@ class PuzzleGame {
 
         // Состояние игры
         this.state = {
-            currentDifficulty: 'e',
+            currentDifficulty: 'easy', // Изменено с 'e' на более понятное значение
             tiles: [],
             gridCells: [],
             draggedTile: null,
@@ -61,6 +61,14 @@ class PuzzleGame {
         // Инициализация игры
         this.createGrid();
         this.setupEventListeners();
+
+        // Устанавливаем начальную сложность
+        const defaultDifficultyBtn = this.elements.difficultyBtns[0];
+        if (defaultDifficultyBtn) {
+            defaultDifficultyBtn.classList.add('selected');
+            this.state.currentDifficulty = defaultDifficultyBtn.dataset.difficulty;
+        }
+
         this.startNewGame();
     }
 
@@ -89,46 +97,57 @@ class PuzzleGame {
         const { puzzleGrid } = this.elements;
         const { gridWidth, gridHeight } = this.config;
 
+        // Очищаем сетку
         puzzleGrid.innerHTML = '';
         this.state.gridCells = [];
 
+        // Создаем ячейки сетки
         for (let i = 0; i < gridHeight * gridWidth; i++) {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
             cell.dataset.index = i;
 
-            cell.addEventListener('dragover', e => {
-                e.preventDefault();
-                cell.classList.add('highlight');
-            });
-
-            cell.addEventListener('dragleave', () => {
-                cell.classList.remove('highlight');
-            });
-
-            cell.addEventListener('drop', e => {
-                e.preventDefault();
-                cell.classList.remove('highlight');
-
-                if (this.state.draggedTile && !cell.hasChildNodes()) {
-                    cell.appendChild(this.state.draggedTile);
-                    this.state.draggedTile = null;
-                    this.checkAutoComplete();
-                }
-            });
+            this.setupCellEventListeners(cell);
 
             this.state.gridCells.push(cell);
             puzzleGrid.appendChild(cell);
         }
     }
 
+    setupCellEventListeners(cell) {
+        cell.addEventListener('dragover', e => {
+            e.preventDefault();
+            cell.classList.add('highlight');
+        });
+
+        cell.addEventListener('dragleave', () => {
+            cell.classList.remove('highlight');
+        });
+
+        cell.addEventListener('drop', e => {
+            e.preventDefault();
+            cell.classList.remove('highlight');
+
+            if (this.state.draggedTile && !cell.hasChildNodes()) {
+                cell.appendChild(this.state.draggedTile);
+                this.state.draggedTile = null;
+                this.checkAutoComplete();
+            }
+        });
+    }
+
     async startNewGame() {
+        if (!this.elementsLoaded) {
+            console.error('Нельзя начать новую игру: элементы не инициализированы');
+            return;
+        }
+
         try {
             this.stopTimer();
             this.state.isGameActive = true;
 
             const response = await fetch(`/api/game/new?difficulty=${this.state.currentDifficulty}`);
-            if (!response.ok) throw new Error('Ошибка сервера');
+            if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
 
             const gameData = await response.json();
             this.createTiles(gameData.grid);
@@ -136,6 +155,7 @@ class PuzzleGame {
         } catch (error) {
             console.error('Ошибка при создании новой игры:', error);
             this.state.isGameActive = false;
+            alert('Не удалось начать новую игру. Пожалуйста, попробуйте позже.');
         }
     }
 
@@ -159,21 +179,24 @@ class PuzzleGame {
 
             tile.style.backgroundImage = `url('/static/${this.state.currentDifficulty}puzzle.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
-
             tile.dataset.correctPosition = position;
 
-            tile.addEventListener('dragstart', () => {
-                this.state.draggedTile = tile;
-                tile.classList.add('dragging');
-            });
-
-            tile.addEventListener('dragend', () => {
-                tile.classList.remove('dragging');
-                this.state.draggedTile = null;
-            });
+            this.setupTileEventListeners(tile);
 
             this.state.tiles.push(tile);
             availableTiles.appendChild(tile);
+        });
+    }
+
+    setupTileEventListeners(tile) {
+        tile.addEventListener('dragstart', () => {
+            this.state.draggedTile = tile;
+            tile.classList.add('dragging');
+        });
+
+        tile.addEventListener('dragend', () => {
+            tile.classList.remove('dragging');
+            this.state.draggedTile = null;
         });
     }
 
@@ -215,6 +238,11 @@ class PuzzleGame {
     }
 
     async checkSolution() {
+        if (!this.state.isGameActive) {
+            console.warn('Игра не активна');
+            return;
+        }
+
         try {
             const currentState = this.getCurrentState();
 
@@ -232,7 +260,7 @@ class PuzzleGame {
                 })
             });
 
-            if (!response.ok) throw new Error('Ошибка сервера');
+            if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
 
             const result = await response.json();
 
@@ -245,6 +273,7 @@ class PuzzleGame {
             }
         } catch (error) {
             console.error('Ошибка при проверке решения:', error);
+            alert('Произошла ошибка при проверке решения. Пожалуйста, попробуйте еще раз.');
         }
     }
 }
