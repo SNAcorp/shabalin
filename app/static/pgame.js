@@ -61,15 +61,18 @@ class PuzzleGame {
         this.availableTiles.addEventListener('dragover', (e) => {
             e.preventDefault();
             this.availableTiles.classList.add('highlight');
+            this.availableTiles.classList.add('puzzle-cell')
         });
 
         this.availableTiles.addEventListener('dragleave', () => {
             this.availableTiles.classList.remove('highlight');
+            this.availableTiles.classList.remove('puzzle-cell')
         });
 
         this.availableTiles.addEventListener('drop', (e) => {
             e.preventDefault();
             this.availableTiles.classList.remove('highlight');
+            this.availableTiles.classList.remove('puzzle-cell')
 
             if (this.state.draggedTile && this.state.draggedTile.parentElement !== this.availableTiles) {
                 this.availableTiles.appendChild(this.state.draggedTile);
@@ -90,15 +93,18 @@ class PuzzleGame {
             cell.addEventListener('dragover', e => {
                 e.preventDefault();
                 cell.classList.add('highlight');
+                cell.classList.add('puzzle-cell')
             });
 
             cell.addEventListener('dragleave', () => {
                 cell.classList.remove('highlight');
+                cell.classList.remove('puzzle-cell')
             });
 
             cell.addEventListener('drop', e => {
                 e.preventDefault();
                 cell.classList.remove('highlight');
+                cell.classList.remove('puzzle-cell')
 
                 if (this.state.draggedTile && !cell.hasChildNodes()) {
                     cell.appendChild(this.state.draggedTile);

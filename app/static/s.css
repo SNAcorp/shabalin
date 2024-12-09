@@ -101,6 +101,9 @@
     gap: 1px;
     background: #ccc;
     z-index: 2;
+}
+
+.puzzle-cell {
     opacity: 0.5;
 }
 
