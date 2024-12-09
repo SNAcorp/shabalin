@@ -38,10 +38,6 @@
     margin-bottom: 10px;
 }
 
-.puzzle-cell {
-    opacity: 0.8;
-}
-
 /* Buttons */
 .control-btn, .difficulty-btn, #togglePreview {
     padding: 8px 16px;
