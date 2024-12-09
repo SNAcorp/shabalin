@@ -65,6 +65,12 @@
             color: white;
         }
 
+        .back {
+            background: #7B7B7B;
+            border-radius: 16px;
+            align-content: center;
+        }
+
         #togglePreview {
             background: #2196F3;
         }
@@ -128,6 +134,8 @@
             border-radius: 12px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
             flex: 1;
+            align-content: center;
+            max-width: 600px;
         }
 
         .grid-container {
@@ -218,10 +226,14 @@
         </div>
 
         <div class="grid-and-preview">
-            <div class="grid-container">
-                <div id="puzzleGrid" class="puzzle-grid"></div>
+            <div class="back">
+                <div class="grid-container">
+                    <div id="puzzleGrid" class="puzzle-grid"></div>
+                </div>
             </div>
-            <img id="previewImage" class="preview-image" alt="Итоговое изображение">
+            <div class="back">
+                <img id="previewImage" class="preview-image" alt="Итоговое изображение">
+            </div>
         </div>
     </div>
 
