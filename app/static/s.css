@@ -91,6 +91,7 @@
     height: 300px;
     border: 1px solid #ccc;
     background: #fff;
+    opacity: 0.5;
 }
 
 .puzzle-grid {
@@ -117,7 +118,6 @@
 
 .grid-cell.highlight {
     background-color: rgba(144, 238, 144, 0.5);
-    opacity: 0.8;
 }
 
 /* Background and tiles */
