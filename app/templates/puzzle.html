@@ -7,58 +7,89 @@
     <link rel="stylesheet" href="https://shabalin.sna.lol/static/s.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
 </head>
-<body class="bg-gray-100">
-    <div class="container mx-auto px-4 py-8">
-        <div class="controls bg-white rounded-lg shadow-md p-6 mb-8">
-            <div class="difficulty-buttons flex space-x-4 mb-6">
-                <button class="difficulty-btn selected hover:scale-105 transform transition" data-difficulty="e">
-                    <i class="fas fa-star mr-2"></i>Легкий
-                </button>
-                <button class="difficulty-btn hover:scale-105 transform transition" data-difficulty="m">
-                    <i class="fas fa-star mr-2"></i><i class="fas fa-star mr-2"></i>Средний
-                </button>
-                <button class="difficulty-btn hover:scale-105 transform transition" data-difficulty="h">
-                    <i class="fas fa-star mr-2"></i><i class="fas fa-star mr-2"></i><i class="fas fa-star"></i>Сложный
-                </button>
-            </div>
+<body>
+    <div class="app-container">
+        <!-- Header с навигацией -->
+        <header class="app-header">
+            <div class="header-content">
+                <div class="header-title">
+                    <i class="fas fa-puzzle-piece"></i>
+                    <h1>Пазл</h1>
+                </div>
 
-            <div class="game-controls flex space-x-4 mb-6">
-                <button id="newGame" class="control-btn flex items-center">
-                    <i class="fas fa-plus mr-2"></i>Новая игра
-                </button>
-                <button id="checkSolution" class="control-btn flex items-center">
-                    <i class="fas fa-check mr-2"></i>Проверить
-                </button>
-                <button id="togglePreview" class="preview-button flex items-center">
-                    <i class="fas fa-eye mr-2"></i>Показать подсказку
-                </button>
-            </div>
-
-            <div id="timer" class="timer text-3xl font-bold text-center">
-                <i class="far fa-clock mr-2"></i>00:00
-            </div>
-        </div>
-
-        <div class="game-wrapper">
-            <div class="tiles-section bg-white rounded-lg shadow-md p-6">
-                <h2 class="text-2xl font-bold mb-4 text-gray-800">
-                    <i class="fas fa-puzzle-piece mr-2"></i>Пазлы
-                </h2>
-                <div id="availableTiles" class="tiles-container">
-                    <!-- Tiles will be dynamically added here -->
+                <!-- Таймер в header -->
+                <div class="header-timer">
+                    <i class="far fa-clock"></i>
+                    <div id="timer">00:00</div>
                 </div>
             </div>
+        </header>
 
-            <div class="grid-and-preview bg-white rounded-lg shadow-md p-6">
-                <div class="grid-container">
-                    <div id="puzzleGrid" class="puzzle-grid">
-                        <!-- Grid cells will be dynamically added here -->
+        <!-- Основной контент -->
+        <main class="main-content">
+            <!-- Панель управления -->
+            <section class="control-panel">
+                <div class="difficulty-controls">
+                    <button class="difficulty-btn selected" data-difficulty="e">
+                        <i class="fas fa-star"></i>
+                        <span>Легкий</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="m">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span>Средний</span>
+                    </button>
+                    <button class="difficulty-btn" data-difficulty="h">
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <i class="fas fa-star"></i>
+                        <span>Сложный</span>
+                    </button>
+                </div>
+
+                <div class="game-actions">
+                    <button id="newGame" class="action-btn">
+                        <i class="fas fa-plus"></i>
+                        <span>Новая игра</span>
+                    </button>
+                    <button id="checkSolution" class="action-btn">
+                        <i class="fas fa-check"></i>
+                        <span>Проверить</span>
+                    </button>
+                    <button id="togglePreview" class="action-btn preview-btn">
+                        <i class="fas fa-eye"></i>
+                        <span>Показать подсказку</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Игровая область -->
+            <div class="game-area">
+                <!-- Секция с плитками -->
+                <section class="tiles-section">
+                    <div class="section-header">
+                        <h2>Доступные части</h2>
+                        <span class="tiles-counter">0/54</span>
                     </div>
-                </div>
+                    <div id="availableTiles" class="tiles-container">
+                        <!-- Плитки будут добавлены динамически -->
+                    </div>
+                </section>
 
-                <img id="previewImage" class="preview-image rounded-lg" alt="Итоговое изображение">
+                <!-- Основная игровая сетка и предпросмотр -->
+                <section class="game-section">
+                    <div class="puzzle-container">
+                        <div id="puzzleGrid" class="puzzle-grid">
+                            <!-- Ячейки сетки будут добавлены динамически -->
+                        </div>
+                    </div>
+
+                    <div class="preview-container">
+                        <img id="previewImage" class="preview-image" alt="Итоговое изображение">
+                    </div>
+                </section>
             </div>
-        </div>
+        </main>
     </div>
     <script src="https://shabalin.sna.lol/static/pgame.js"></script>
 </body>
