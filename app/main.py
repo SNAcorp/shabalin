@@ -82,7 +82,7 @@ class GameState(BaseModel):
 
 
 @app.get("/api/game/new")
-async def new_game(difficulty: Optional[str] = 'easy'):
+async def new_game(difficulty: Optional[str] = 'e'):
     """
     Создание новой игры
     Args:
@@ -91,7 +91,7 @@ async def new_game(difficulty: Optional[str] = 'easy'):
         dict: Состояние игры с перемешанными тайлами
     """
     if difficulty not in DIFFICULTY_LEVELS:
-        difficulty = 'easy'
+        difficulty = 'e'
 
     # Создаем сетку 9x6
     grid = list(range(54))  # 54 тайла (9x6)
