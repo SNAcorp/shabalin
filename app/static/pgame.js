@@ -1,41 +1,32 @@
 class PuzzleGame {
     constructor() {
-        // Сначала инициализируем элементы
-        this.elementsLoaded = this.initElements();
-
-        // Только если элементы успешно загружены, инициализируем игру
+        // Инициализация после загрузки DOM
+        this.initElements();
         if (this.elementsLoaded) {
             this.initGame();
-        } else {
-            console.error('Не удалось инициализировать игру: отсутствуют необходимые элементы DOM');
         }
     }
 
     initElements() {
         try {
             // Получаем все необходимые DOM элементы
-            this.elements = {
-                availableTiles: document.getElementById('availableTiles'),
-                puzzleGrid: document.getElementById('puzzleGrid'),
-                newGameBtn: document.getElementById('newGame'),
-                checkBtn: document.getElementById('checkSolution'),
-                timerDisplay: document.getElementById('timer'),
-                difficultyBtns: document.querySelectorAll('.difficulty-btn')
-            };
+            this.puzzleGrid = document.getElementById('puzzleGrid');
+            this.availableTiles = document.getElementById('availableTiles');
+            this.newGameBtn = document.getElementById('newGame');
+            this.checkBtn = document.getElementById('checkSolution');
+            this.timerDisplay = document.getElementById('timer');
+            this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
 
-            // Проверяем наличие всех обязательных элементов
-            const requiredElements = ['availableTiles', 'puzzleGrid', 'newGameBtn', 'checkBtn', 'timerDisplay'];
-            const missingElements = requiredElements.filter(key => !this.elements[key]);
-
-            if (missingElements.length > 0) {
-                console.error(`Не найдены следующие элементы: ${missingElements.join(', ')}`);
-                return false;
+            // Проверяем наличие всех элементов
+            if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
+                !this.checkBtn || !this.timerDisplay) {
+                throw new Error('Не найдены необходимые элементы DOM');
             }
 
-            return true;
+            this.elementsLoaded = true;
         } catch (error) {
             console.error('Ошибка инициализации элементов:', error);
-            return false;
+            this.elementsLoaded = false;
         }
     }
 
@@ -49,7 +40,7 @@ class PuzzleGame {
 
         // Состояние игры
         this.state = {
-            currentDifficulty: 'easy', // Изменено с 'e' на более понятное значение
+            currentDifficulty: 'e',  // Значение по умолчанию
             tiles: [],
             gridCells: [],
             draggedTile: null,
@@ -61,31 +52,21 @@ class PuzzleGame {
         // Инициализация игры
         this.createGrid();
         this.setupEventListeners();
-
-        // Устанавливаем начальную сложность
-        const defaultDifficultyBtn = this.elements.difficultyBtns[0];
-        if (defaultDifficultyBtn) {
-            defaultDifficultyBtn.classList.add('selected');
-            this.state.currentDifficulty = defaultDifficultyBtn.dataset.difficulty;
-        }
-
         this.startNewGame();
     }
 
     setupEventListeners() {
-        const { newGameBtn, checkBtn, difficultyBtns } = this.elements;
+        this.newGameBtn.addEventListener('click', () => this.startNewGame());
+        this.checkBtn.addEventListener('click', () => this.checkSolution());
 
-        newGameBtn.addEventListener('click', () => this.startNewGame());
-        checkBtn.addEventListener('click', () => this.checkSolution());
-
-        difficultyBtns.forEach(btn => {
+        this.difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (this.state.isGameActive) {
                     const shouldRestart = window.confirm('Начать новую игру?');
                     if (!shouldRestart) return;
                 }
 
-                difficultyBtns.forEach(b => b.classList.remove('selected'));
+                this.difficultyBtns.forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
                 this.state.currentDifficulty = btn.dataset.difficulty;
                 this.startNewGame();
@@ -94,67 +75,53 @@ class PuzzleGame {
     }
 
     createGrid() {
-        const { puzzleGrid } = this.elements;
-        const { gridWidth, gridHeight } = this.config;
-
-        // Очищаем сетку
-        puzzleGrid.innerHTML = '';
+        this.puzzleGrid.innerHTML = '';
         this.state.gridCells = [];
 
-        // Создаем ячейки сетки
-        for (let i = 0; i < gridHeight * gridWidth; i++) {
+        const totalCells = this.config.gridHeight * this.config.gridWidth;
+
+        for (let i = 0; i < totalCells; i++) {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
             cell.dataset.index = i;
 
-            this.setupCellEventListeners(cell);
+            cell.addEventListener('dragover', e => {
+                e.preventDefault();
+                cell.classList.add('highlight');
+            });
+
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('highlight');
+            });
+
+            cell.addEventListener('drop', e => {
+                e.preventDefault();
+                cell.classList.remove('highlight');
+
+                if (this.state.draggedTile && !cell.hasChildNodes()) {
+                    cell.appendChild(this.state.draggedTile);
+                    this.state.draggedTile = null;
+                    this.checkAutoComplete();
+                }
+            });
 
             this.state.gridCells.push(cell);
-            puzzleGrid.appendChild(cell);
+            this.puzzleGrid.appendChild(cell);
         }
-    }
-
-    setupCellEventListeners(cell) {
-        cell.addEventListener('dragover', e => {
-            e.preventDefault();
-            cell.classList.add('highlight');
-        });
-
-        cell.addEventListener('dragleave', () => {
-            cell.classList.remove('highlight');
-        });
-
-        cell.addEventListener('drop', e => {
-            e.preventDefault();
-            cell.classList.remove('highlight');
-
-            if (this.state.draggedTile && !cell.hasChildNodes()) {
-                cell.appendChild(this.state.draggedTile);
-                this.state.draggedTile = null;
-                this.checkAutoComplete();
-            }
-        });
     }
 
     async startNewGame() {
-        if (!this.elementsLoaded || !this.elements.availableTiles) {
-            console.error('Нельзя начать новую игру: элементы не инициализированы');
-            return;
-        }
-
         try {
-            // Очищаем контейнер тайлов перед созданием новой игры
-            this.elements.availableTiles.innerHTML = '';
             this.stopTimer();
             this.state.isGameActive = true;
 
-            // Используем правильный URL из запроса
+            // Очищаем контейнер тайлов перед запросом
+            this.availableTiles.innerHTML = '';
+
             const response = await fetch('https://shabalin.sna.lol/api/game/new');
             if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
 
             const gameData = await response.json();
-
-            // Проверяем наличие необходимых данных
             if (!gameData || !gameData.grid) {
                 throw new Error('Некорректные данные от сервера');
             }
@@ -169,13 +136,8 @@ class PuzzleGame {
     }
 
     createTiles(grid) {
-        if (!this.elements.availableTiles) {
-            throw new Error('Контейнер для тайлов не найден');
-        }
-        const { tileSize, gridWidth } = this.config;
-
         // Очищаем контейнеры
-        this.elements.availableTiles.innerHTML = '';
+        this.availableTiles.innerHTML = '';
         this.state.gridCells.forEach(cell => cell.innerHTML = '');
         this.state.tiles = [];
 
@@ -185,29 +147,25 @@ class PuzzleGame {
             tile.className = 'tile';
             tile.draggable = true;
 
-            const originalX = (position % gridWidth) * tileSize;
-            const originalY = Math.floor(position / gridWidth) * tileSize;
+            const originalX = (position % this.config.gridWidth) * this.config.tileSize;
+            const originalY = Math.floor(position / this.config.gridWidth) * this.config.tileSize;
 
             tile.style.backgroundImage = `url('/static/${this.state.currentDifficulty}puzzle.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
             tile.dataset.correctPosition = position;
 
-            this.setupTileEventListeners(tile);
+            tile.addEventListener('dragstart', () => {
+                this.state.draggedTile = tile;
+                tile.classList.add('dragging');
+            });
+
+            tile.addEventListener('dragend', () => {
+                tile.classList.remove('dragging');
+                this.state.draggedTile = null;
+            });
 
             this.state.tiles.push(tile);
-            availableTiles.appendChild(tile);
-        });
-    }
-
-    setupTileEventListeners(tile) {
-        tile.addEventListener('dragstart', () => {
-            this.state.draggedTile = tile;
-            tile.classList.add('dragging');
-        });
-
-        tile.addEventListener('dragend', () => {
-            tile.classList.remove('dragging');
-            this.state.draggedTile = null;
+            this.availableTiles.appendChild(tile);
         });
     }
 
@@ -227,11 +185,10 @@ class PuzzleGame {
     updateTimer() {
         if (!this.state.startTime) return;
 
-        const { timerDisplay } = this.elements;
         const elapsed = Math.floor((Date.now() - this.state.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
         const seconds = (elapsed % 60).toString().padStart(2, '0');
-        timerDisplay.textContent = `${minutes}:${seconds}`;
+        this.timerDisplay.textContent = `${minutes}:${seconds}`;
     }
 
     getCurrentState() {
@@ -249,11 +206,6 @@ class PuzzleGame {
     }
 
     async checkSolution() {
-        if (!this.state.isGameActive) {
-            console.warn('Игра не активна');
-            return;
-        }
-
         try {
             const currentState = this.getCurrentState();
 
@@ -262,7 +214,7 @@ class PuzzleGame {
                 return;
             }
 
-            const response = await fetch('/api/game/check', {
+            const response = await fetch('https://shabalin.sna.lol/api/game/check', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -274,11 +226,10 @@ class PuzzleGame {
             if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
 
             const result = await response.json();
-
             if (result.solved) {
                 this.stopTimer();
                 this.state.isGameActive = false;
-                alert(`Поздравляем! Вы собрали пазл за ${this.elements.timerDisplay.textContent}!`);
+                alert(`Поздравляем! Вы собрали пазл за ${this.timerDisplay.textContent}!`);
             } else {
                 alert('Пока не верно. Попробуйте еще!');
             }
