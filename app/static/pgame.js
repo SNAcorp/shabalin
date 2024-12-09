@@ -125,7 +125,7 @@ class PuzzleGame {
                 this.togglePreviewBtn.classList.add('active');
                 this.previewImageBack.classList.add('active');
             } else {
-                this.previewImageBack.classList.remove('active');
+                this.previewImageBack.classList.add('active');
                 this.previewImage.style.display = 'none';
                 this.togglePreviewBtn.textContent = 'Показать подсказку';
                 this.togglePreviewBtn.classList.remove('active');
