@@ -5,124 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Puzzle Game</title>
     <link rel="stylesheet" href="/static/s.css">
-    <style>
-        .game-wrapper {
-            display: flex;
-            gap: 20px;
-            padding: 20px;
-        }
-
-        .grid-container {
-            position: relative;
-            background: #fff;
-            width: 450px;  /* 9 клеток * 50px */
-            height: 300px; /* 6 клеток * 50px */
-            border: 1px solid #ccc;
-            overflow: hidden;
-        }
-
-        .puzzle-grid {
-            position: relative;
-            z-index: 2;
-            display: grid;
-            grid-template-columns: repeat(9, 50px);
-            grid-template-rows: repeat(6, 50px);
-            gap: 1px;
-            background: #ccc;
-            width: 450px;
-            height: 300px;
-        }
-
-        .puzzle-background {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 450px; /* Такой же размер как и сетка */
-            height: 300px;
-            z-index: 1;
-            opacity: 0.4;
-            pointer-events: none;
-            background-size: cover;
-            background-position: center;
-            display: none;
-            image-rendering: -webkit-optimize-contrast;
-            image-rendering: crisp-edges;
-        }
-
-        .grid-cell {
-            width: 50px;
-            height: 50px;
-            background: #fff;
-            border: 1px solid #ccc;
-            box-sizing: border-box;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
-
-        .grid-cell.highlight {
-            background-color: rgba(144, 238, 144, 0.5);
-        }
-
-        .tile {
-            width: 100%;
-            height: 100%;
-            cursor: grab;
-            position: relative;
-            background-size: 450px 300px;
-            background-repeat: no-repeat;
-        }
-
-        .tile.dragging {
-            opacity: 0.8;
-            cursor: grabbing;
-        }
-
-        .tiles-container {
-            min-height: 100px;
-            padding: 10px;
-            border: 2px dashed #ccc;
-            margin-bottom: 20px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 5px;
-            min-width: 300px;
-        }
-
-        .preview-button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-            margin: 10px;
-            transition: background-color 0.3s ease;
-        }
-
-        .preview-button.active {
-            background-color: #e74c3c;
-        }
-
-        .controls {
-            margin-bottom: 20px;
-        }
-
-        .difficulty-buttons {
-            margin-bottom: 10px;
-        }
-
-        .difficulty-btn {
-            margin-right: 5px;
-            padding: 5px 10px;
-        }
-
-        .difficulty-btn.selected {
-            background-color: #4CAF50;
-            color: white;
-        }
-    </style>
 </head>
 <body>
     <div class="game-wrapper">
@@ -134,7 +16,7 @@
             </div>
         </div>
 
-        <!-- Right side: Grid and Preview -->
+        <!-- Right side: Grid -->
         <div class="grid-section">
             <div class="controls">
                 <div class="difficulty-buttons">
