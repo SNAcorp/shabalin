@@ -137,34 +137,45 @@ class PuzzleGame {
     }
 
     async startNewGame() {
-        if (!this.elementsLoaded) {
+        if (!this.elementsLoaded || !this.elements.availableTiles) {
             console.error('Нельзя начать новую игру: элементы не инициализированы');
             return;
         }
 
         try {
+            // Очищаем контейнер тайлов перед созданием новой игры
+            this.elements.availableTiles.innerHTML = '';
             this.stopTimer();
             this.state.isGameActive = true;
 
-            const response = await fetch(`/api/game/new?difficulty=${this.state.currentDifficulty}`);
+            // Используем правильный URL из запроса
+            const response = await fetch('https://shabalin.sna.lol/api/game/new');
             if (!response.ok) throw new Error(`Ошибка сервера: ${response.status}`);
 
             const gameData = await response.json();
+
+            // Проверяем наличие необходимых данных
+            if (!gameData || !gameData.grid) {
+                throw new Error('Некорректные данные от сервера');
+            }
+
             this.createTiles(gameData.grid);
             this.startTimer();
         } catch (error) {
             console.error('Ошибка при создании новой игры:', error);
             this.state.isGameActive = false;
-            alert('Не удалось начать новую игру. Пожалуйста, попробуйте позже.');
+            alert('Не удалось начать новую игру: ' + error.message);
         }
     }
 
     createTiles(grid) {
-        const { availableTiles } = this.elements;
+        if (!this.elements.availableTiles) {
+            throw new Error('Контейнер для тайлов не найден');
+        }
         const { tileSize, gridWidth } = this.config;
 
         // Очищаем контейнеры
-        availableTiles.innerHTML = '';
+        this.elements.availableTiles.innerHTML = '';
         this.state.gridCells.forEach(cell => cell.innerHTML = '');
         this.state.tiles = [];
 
