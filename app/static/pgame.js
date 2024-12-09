@@ -3,10 +3,17 @@ class PuzzleGame {
         // DOM элементы
         this.availableTiles = document.getElementById('availableTiles');
         this.puzzleGrid = document.getElementById('puzzleGrid');
-        this.newGameBtn = document.getElementById('newGameBtn');
-        this.checkBtn = document.getElementById('checkBtn');
+        this.newGameBtn = document.getElementById('newGame');
+        this.checkBtn = document.getElementById('checkSolution');
         this.timer = document.getElementById('timer');
         this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
+
+        // Проверяем, что все элементы найдены
+        if (!this.availableTiles || !this.puzzleGrid || !this.newGameBtn ||
+            !this.checkBtn || !this.timer) {
+            console.error('Не удалось найти все необходимые элементы на странице');
+            return;
+        }
 
         // Конфигурация
         this.tileSize = 50;
@@ -93,7 +100,7 @@ class PuzzleGame {
         this.isGameActive = true;
 
         try {
-            const response = await fetch(`https://shabalin.sna.lol/api/game/new?difficulty=${this.currentDifficulty}`);
+            const response = await fetch(`/api/game/new?difficulty=${this.currentDifficulty}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
@@ -122,7 +129,7 @@ class PuzzleGame {
             const originalY = Math.floor(position / this.gridWidth) * this.tileSize;
 
             // Устанавливаем фоновое изображение
-            tile.style.backgroundImage = `url('https://shabalin.sna.lol/static/${this.currentDifficulty}puzzle.jpg')`;
+            tile.style.backgroundImage = `url('/static/images/puzzle_${this.currentDifficulty}.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
             tile.dataset.correctPosition = position;
@@ -187,7 +194,7 @@ class PuzzleGame {
         }
 
         try {
-            const response = await fetch('https://shabalin.sna.lol/api/game/check', {
+            const response = await fetch('/api/game/check', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
