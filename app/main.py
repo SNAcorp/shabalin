@@ -61,15 +61,15 @@ async def index(request: Request):
 
 
 DIFFICULTY_LEVELS = {
-    'easy': {
+    'e': {
         'image': 'epuzzle.jpg',
         'description': 'Легкий уровень'
     },
-    'medium': {
-        'image': 'puzzle.jpg',
+    'm': {
+        'image': 'mpuzzle.jpg',
         'description': 'Средний уровень'
     },
-    'hard': {
+    'h': {
         'image': 'hpuzzle.jpg',
         'description': 'Сложный уровень'
     }
