@@ -16,6 +16,7 @@ class PuzzleGame {
             this.timerDisplay = document.getElementById('timer');
             this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
             this.togglePreviewBtn = document.getElementById('togglePreview');
+            this.previewImageBack = document.getElementById('backPreview');
 
             if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
                 !this.checkBtn || !this.timerDisplay || !this.togglePreviewBtn ||
@@ -122,7 +123,9 @@ class PuzzleGame {
                 this.previewImage.style.display = 'block';
                 this.togglePreviewBtn.textContent = 'Скрыть подсказку';
                 this.togglePreviewBtn.classList.add('active');
+                this.previewImageBack.classList.add('active');
             } else {
+                this.previewImageBack.classList.remove('active');
                 this.previewImage.style.display = 'none';
                 this.togglePreviewBtn.textContent = 'Показать подсказку';
                 this.togglePreviewBtn.classList.remove('active');
