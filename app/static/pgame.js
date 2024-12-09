@@ -129,7 +129,7 @@ class PuzzleGame {
             const originalY = Math.floor(position / this.gridWidth) * this.tileSize;
 
             // Устанавливаем фоновое изображение
-            tile.style.backgroundImage = `url('/static/images/${this.currentDifficulty}puzzle.jpg')`;
+            tile.style.backgroundImage = `url('/static/${this.currentDifficulty}puzzle.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
             tile.dataset.correctPosition = position;
