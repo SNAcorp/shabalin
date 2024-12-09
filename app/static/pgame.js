@@ -19,7 +19,7 @@ class PuzzleGame {
         this.tileSize = 50;
         this.gridWidth = 9;
         this.gridHeight = 6;
-        this.currentDifficulty = 'easy';
+        this.currentDifficulty = 'e';
 
         // Состояние игры
         this.tiles = [];
@@ -100,7 +100,7 @@ class PuzzleGame {
         this.isGameActive = true;
 
         try {
-            const response = await fetch(`/api/game/new?difficulty=${this.currentDifficulty}`);
+            const response = await fetch(`ht/api/game/new?difficulty=${this.currentDifficulty}`);
             if (!response.ok) {
                 throw new Error('Network response was not ok');
             }
