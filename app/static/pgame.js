@@ -1,129 +1,125 @@
 class PuzzleGame {
     constructor() {
-        this.init();
-    }
-
-    init() {
-        try {
-            // Инициализация DOM элементов
-            this.initializeElements();
-
-            // Базовые настройки
-            this.settings = {
-                tileSize: 50,
-                gridWidth: 9,
-                gridHeight: 6,
-                currentDifficulty: 'e'
-            };
-
-            // Состояние игры
-            this.state = {
-                tiles: [],
-                gridCells: [],
-                draggedTile: null,
-                timerInterval: null,
-                startTime: null,
-                isGameActive: false
-            };
-
-            // Запуск игры
-            this.initializeGame();
-        } catch (error) {
-            console.error('Ошибка инициализации игры:', error);
+        this.initElements();
+        if (this.elementsLoaded) {
+            this.initGame();
         }
     }
 
-    initializeElements() {
-        // Инициализация элементов с проверками
-        this.elements = {
-            tiles: document.getElementById('availableTiles'),
-            grid: document.getElementById('puzzleGrid'),
-            newGame: document.getElementById('newGame'),
-            check: document.getElementById('checkSolution'),
-            timer: document.getElementById('timer'),
-            difficultyBtns: document.querySelectorAll('.difficulty-btn')
+    initElements() {
+        try {
+            // Получаем все необходимые DOM элементы
+            const elements = {
+                availableTiles: document.getElementById('availableTiles'),
+                puzzleGrid: document.getElementById('puzzleGrid'),
+                newGameBtn: document.getElementById('newGame'),
+                checkBtn: document.getElementById('checkSolution'),
+                timerDisplay: document.getElementById('timer'),
+                difficultyBtns: document.querySelectorAll('.difficulty-btn')
+            };
+
+            // Проверяем наличие всех элементов
+            const missingElements = [];
+            for (const [key, element] of Object.entries(elements)) {
+                if (!element && key !== 'difficultyBtns') {
+                    missingElements.push(key);
+                }
+            }
+
+            if (missingElements.length > 0) {
+                throw new Error(`Не найдены следующие элементы: ${missingElements.join(', ')}`);
+            }
+
+            // Если все элементы найдены, сохраняем их
+            this.elements = elements;
+            this.elementsLoaded = true;
+        } catch (error) {
+            console.error('Ошибка инициализации элементов:', error);
+            this.elementsLoaded = false;
+        }
+    }
+
+    initGame() {
+        // Конфигурация игры
+        this.config = {
+            tileSize: 50,
+            gridWidth: 9,
+            gridHeight: 6
         };
 
-        // Проверка наличия всех необходимых элементов
-        const missingElements = Object.entries(this.elements)
-            .filter(([key, element]) => !element && key !== 'difficultyBtns')
-            .map(([key]) => key);
+        // Состояние игры
+        this.state = {
+            currentDifficulty: 'e',
+            tiles: [],
+            gridCells: [],
+            draggedTile: null,
+            timerInterval: null,
+            startTime: null,
+            isGameActive: false
+        };
 
-        if (missingElements.length > 0) {
-            throw new Error(`Отсутствуют элементы: ${missingElements.join(', ')}`);
-        }
-    }
-
-    initializeGame() {
+        // Инициализация игры
         this.createGrid();
         this.setupEventListeners();
         this.startNewGame();
     }
 
     setupEventListeners() {
-        // Обработчики для кнопок
-        this.elements.newGame.addEventListener('click', () => this.startNewGame());
-        this.elements.check.addEventListener('click', () => this.checkSolution());
+        const { newGameBtn, checkBtn, difficultyBtns } = this.elements;
 
-        // Обработчики для кнопок сложности
-        this.elements.difficultyBtns.forEach(btn => {
+        newGameBtn.addEventListener('click', () => this.startNewGame());
+        checkBtn.addEventListener('click', () => this.checkSolution());
+
+        difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
                 if (this.state.isGameActive) {
                     const shouldRestart = window.confirm('Начать новую игру?');
                     if (!shouldRestart) return;
                 }
 
-                this.elements.difficultyBtns.forEach(b => b.classList.remove('selected'));
+                difficultyBtns.forEach(b => b.classList.remove('selected'));
                 btn.classList.add('selected');
-                this.settings.currentDifficulty = btn.dataset.difficulty;
+                this.state.currentDifficulty = btn.dataset.difficulty;
                 this.startNewGame();
             });
         });
-
-        // Обработчик для сетки
-        this.elements.grid.addEventListener('dragover', (e) => e.preventDefault());
     }
 
     createGrid() {
-        const { gridWidth, gridHeight } = this.settings;
-        this.elements.grid.innerHTML = '';
+        const { puzzleGrid } = this.elements;
+        const { gridWidth, gridHeight } = this.config;
+
+        puzzleGrid.innerHTML = '';
         this.state.gridCells = [];
 
-        const totalCells = gridWidth * gridHeight;
-
-        for (let i = 0; i < totalCells; i++) {
+        for (let i = 0; i < gridHeight * gridWidth; i++) {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
             cell.dataset.index = i;
 
-            // Обработчики для drag&drop
-            this.setupCellDragAndDrop(cell);
+            cell.addEventListener('dragover', e => {
+                e.preventDefault();
+                cell.classList.add('highlight');
+            });
+
+            cell.addEventListener('dragleave', () => {
+                cell.classList.remove('highlight');
+            });
+
+            cell.addEventListener('drop', e => {
+                e.preventDefault();
+                cell.classList.remove('highlight');
+
+                if (this.state.draggedTile && !cell.hasChildNodes()) {
+                    cell.appendChild(this.state.draggedTile);
+                    this.state.draggedTile = null;
+                    this.checkAutoComplete();
+                }
+            });
 
             this.state.gridCells.push(cell);
-            this.elements.grid.appendChild(cell);
+            puzzleGrid.appendChild(cell);
         }
-    }
-
-    setupCellDragAndDrop(cell) {
-        cell.addEventListener('dragover', e => {
-            e.preventDefault();
-            cell.classList.add('highlight');
-        });
-
-        cell.addEventListener('dragleave', () => {
-            cell.classList.remove('highlight');
-        });
-
-        cell.addEventListener('drop', e => {
-            e.preventDefault();
-            cell.classList.remove('highlight');
-
-            if (this.state.draggedTile && !cell.hasChildNodes()) {
-                cell.appendChild(this.state.draggedTile);
-                this.state.draggedTile = null;
-                this.checkAutoComplete();
-            }
-        });
     }
 
     async startNewGame() {
@@ -131,62 +127,53 @@ class PuzzleGame {
             this.stopTimer();
             this.state.isGameActive = true;
 
-            const response = await fetch(`/api/game/new?difficulty=${this.settings.currentDifficulty}`);
+            const response = await fetch(`/api/game/new?difficulty=${this.state.currentDifficulty}`);
             if (!response.ok) throw new Error('Ошибка сервера');
 
             const gameData = await response.json();
-            await this.createTiles(gameData.grid);
+            this.createTiles(gameData.grid);
             this.startTimer();
         } catch (error) {
-            console.error('Ошибка запуска новой игры:', error);
-            alert('Не удалось начать новую игру. Попробуйте еще раз.');
+            console.error('Ошибка при создании новой игры:', error);
             this.state.isGameActive = false;
         }
     }
 
-    async createTiles(grid) {
-        try {
-            const { tileSize, gridWidth } = this.settings;
-            this.elements.tiles.innerHTML = '';
-            this.state.gridCells.forEach(cell => cell.innerHTML = '');
-            this.state.tiles = [];
+    createTiles(grid) {
+        const { availableTiles } = this.elements;
+        const { tileSize, gridWidth } = this.config;
 
-            grid.forEach((position, index) => {
-                const tile = document.createElement('div');
-                tile.className = 'tile';
-                tile.draggable = true;
+        // Очищаем контейнеры
+        availableTiles.innerHTML = '';
+        this.state.gridCells.forEach(cell => cell.innerHTML = '');
+        this.state.tiles = [];
 
-                // Позиция в изображении
-                const originalX = (position % gridWidth) * tileSize;
-                const originalY = Math.floor(position / gridWidth) * tileSize;
+        // Создаем новые тайлы
+        grid.forEach((position, index) => {
+            const tile = document.createElement('div');
+            tile.className = 'tile';
+            tile.draggable = true;
 
-                // Установка фона
-                tile.style.backgroundImage = `url('/static/${this.settings.currentDifficulty}puzzle.jpg')`;
-                tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
+            const originalX = (position % gridWidth) * tileSize;
+            const originalY = Math.floor(position / gridWidth) * tileSize;
 
-                tile.dataset.correctPosition = position;
+            tile.style.backgroundImage = `url('/static/${this.state.currentDifficulty}puzzle.jpg')`;
+            tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
 
-                // Обработчики перетаскивания
-                this.setupTileDragAndDrop(tile);
+            tile.dataset.correctPosition = position;
 
-                this.state.tiles.push(tile);
-                this.elements.tiles.appendChild(tile);
+            tile.addEventListener('dragstart', () => {
+                this.state.draggedTile = tile;
+                tile.classList.add('dragging');
             });
-        } catch (error) {
-            console.error('Ошибка создания тайлов:', error);
-            throw error;
-        }
-    }
 
-    setupTileDragAndDrop(tile) {
-        tile.addEventListener('dragstart', () => {
-            this.state.draggedTile = tile;
-            tile.classList.add('dragging');
-        });
+            tile.addEventListener('dragend', () => {
+                tile.classList.remove('dragging');
+                this.state.draggedTile = null;
+            });
 
-        tile.addEventListener('dragend', () => {
-            tile.classList.remove('dragging');
-            this.state.draggedTile = null;
+            this.state.tiles.push(tile);
+            availableTiles.appendChild(tile);
         });
     }
 
@@ -206,10 +193,11 @@ class PuzzleGame {
     updateTimer() {
         if (!this.state.startTime) return;
 
+        const { timerDisplay } = this.elements;
         const elapsed = Math.floor((Date.now() - this.state.startTime) / 1000);
         const minutes = Math.floor(elapsed / 60).toString().padStart(2, '0');
         const seconds = (elapsed % 60).toString().padStart(2, '0');
-        this.elements.timer.textContent = `${minutes}:${seconds}`;
+        timerDisplay.textContent = `${minutes}:${seconds}`;
     }
 
     getCurrentState() {
@@ -240,7 +228,7 @@ class PuzzleGame {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     grid: currentState,
-                    difficulty: this.settings.currentDifficulty
+                    difficulty: this.state.currentDifficulty
                 })
             });
 
@@ -251,23 +239,17 @@ class PuzzleGame {
             if (result.solved) {
                 this.stopTimer();
                 this.state.isGameActive = false;
-                alert(`Поздравляем! Вы собрали пазл за ${this.elements.timer.textContent}!`);
+                alert(`Поздравляем! Вы собрали пазл за ${this.elements.timerDisplay.textContent}!`);
             } else {
                 alert('Пока не верно. Попробуйте еще!');
             }
         } catch (error) {
-            console.error('Ошибка проверки решения:', error);
-            alert('Не удалось проверить решение. Попробуйте еще раз.');
+            console.error('Ошибка при проверке решения:', error);
         }
     }
 }
 
-// Запуск игры после загрузки DOM
+// Инициализация игры при загрузке страницы
 document.addEventListener('DOMContentLoaded', () => {
-    try {
-        new PuzzleGame();
-    } catch (error) {
-        console.error('Ошибка запуска игры:', error);
-        alert('Не удалось запустить игру. Пожалуйста, обновите страницу.');
-    }
+    new PuzzleGame();
 });
