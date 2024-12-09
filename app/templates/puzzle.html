@@ -8,7 +8,6 @@
 </head>
 <body>
     <div class="game-wrapper">
-        <!-- Left side: Available tiles -->
         <div class="tiles-section">
             <h2>Пазлы</h2>
             <div id="availableTiles" class="tiles-container">
@@ -16,8 +15,7 @@
             </div>
         </div>
 
-        <!-- Right side: Grid -->
-        <div class="grid-section">
+        <div class="grid-and-preview">
             <div class="controls">
                 <div class="difficulty-buttons">
                     <button class="difficulty-btn selected" data-difficulty="e">Легкий</button>
@@ -38,8 +36,9 @@
                 <div id="puzzleGrid" class="puzzle-grid">
                     <!-- Grid cells will be dynamically added here -->
                 </div>
-                <div id="puzzleBackground" class="puzzle-background"></div>
             </div>
+
+            <img id="previewImage" class="preview-image" alt="Итоговое изображение">
         </div>
     </div>
     <script src="https://shabalin.sna.lol/static/pgame.js"></script>

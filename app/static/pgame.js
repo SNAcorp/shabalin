@@ -8,10 +8,9 @@ class PuzzleGame {
 
     initElements() {
         try {
-            // Получаем все необходимые DOM элементы
             this.puzzleGrid = document.getElementById('puzzleGrid');
             this.availableTiles = document.getElementById('availableTiles');
-            this.puzzleBackground = document.getElementById('puzzleBackground');
+            this.previewImage = document.getElementById('previewImage');
             this.newGameBtn = document.getElementById('newGame');
             this.checkBtn = document.getElementById('checkSolution');
             this.timerDisplay = document.getElementById('timer');
@@ -20,7 +19,7 @@ class PuzzleGame {
 
             if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
                 !this.checkBtn || !this.timerDisplay || !this.togglePreviewBtn ||
-                !this.puzzleBackground) {
+                !this.previewImage) {
                 throw new Error('Не найдены необходимые элементы DOM');
             }
 
@@ -36,8 +35,8 @@ class PuzzleGame {
             tileSize: 50,
             gridWidth: 9,
             gridHeight: 6,
-            totalWidth: 450,  // 9 * 50
-            totalHeight: 300  // 6 * 50
+            totalWidth: 450,
+            totalHeight: 300
         };
 
         this.state = {
@@ -115,7 +114,20 @@ class PuzzleGame {
     setupEventListeners() {
         this.newGameBtn.addEventListener('click', () => this.startNewGame());
         this.checkBtn.addEventListener('click', () => this.checkSolution());
-        this.togglePreviewBtn.addEventListener('click', () => this.togglePreview());
+
+        this.togglePreviewBtn.addEventListener('click', () => {
+            this.state.isPreviewVisible = !this.state.isPreviewVisible;
+
+            if (this.state.isPreviewVisible) {
+                this.previewImage.style.display = 'block';
+                this.togglePreviewBtn.textContent = 'Скрыть подсказку';
+                this.togglePreviewBtn.classList.add('active');
+            } else {
+                this.previewImage.style.display = 'none';
+                this.togglePreviewBtn.textContent = 'Показать подсказку';
+                this.togglePreviewBtn.classList.remove('active');
+            }
+        });
 
         this.difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -132,24 +144,6 @@ class PuzzleGame {
         });
     }
 
-    togglePreview() {
-        this.state.isPreviewVisible = !this.state.isPreviewVisible;
-
-        if (this.state.isPreviewVisible) {
-            this.puzzleBackground.style.display = 'block';
-            this.puzzleBackground.style.opacity = '0.3';
-            this.togglePreviewBtn.textContent = 'Скрыть подсказку';
-            this.togglePreviewBtn.classList.add('active');
-        } else {
-            this.puzzleBackground.style.opacity = '0';
-            setTimeout(() => {
-                this.puzzleBackground.style.display = 'none';
-            }, 300);
-            this.togglePreviewBtn.textContent = 'Показать подсказку';
-            this.togglePreviewBtn.classList.remove('active');
-        }
-    }
-
     async startNewGame() {
         try {
             this.stopTimer();
@@ -164,10 +158,7 @@ class PuzzleGame {
                 throw new Error('Некорректные данные от сервера');
             }
 
-            // Обновляем фоновое изображение
-            this.updateBackgroundImage();
-
-            // Создаем плитки
+            this.updatePreviewImage();
             this.createTiles(gameData.grid);
             this.startTimer();
         } catch (error) {
@@ -177,14 +168,13 @@ class PuzzleGame {
         }
     }
 
-    updateBackgroundImage() {
+    updatePreviewImage() {
         const imagePath = `/static/${this.state.currentDifficulty}puzzle.jpg`;
-        this.puzzleBackground.style.backgroundImage = `url('${imagePath}')`;
+        this.previewImage.src = imagePath;
 
         // Сбрасываем состояние подсказки
         this.state.isPreviewVisible = false;
-        this.puzzleBackground.style.display = 'none';
-        this.puzzleBackground.style.opacity = '0';
+        this.previewImage.style.display = 'none';
         this.togglePreviewBtn.textContent = 'Показать подсказку';
         this.togglePreviewBtn.classList.remove('active');
     }
