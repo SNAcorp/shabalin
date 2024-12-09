@@ -17,13 +17,11 @@ class PuzzleGame {
             this.timerDisplay = document.getElementById('timer');
             this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
             this.togglePreviewBtn = document.getElementById('togglePreview');
-            this.previewSection = document.getElementById('previewSection');
-            this.previewImage = document.getElementById('previewImage');
 
             // Проверяем наличие всех элементов
             if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
                 !this.checkBtn || !this.timerDisplay || !this.togglePreviewBtn ||
-                !this.previewSection || !this.previewImage || !this.puzzleBackground) {
+                !this.puzzleBackground) {
                 throw new Error('Не найдены необходимые элементы DOM');
             }
 
@@ -35,14 +33,12 @@ class PuzzleGame {
     }
 
     initGame() {
-        // Конфигурация игры
         this.config = {
             tileSize: 50,
             gridWidth: 9,
             gridHeight: 6
         };
 
-        // Состояние игры
         this.state = {
             currentDifficulty: 'e',
             tiles: [],
@@ -51,10 +47,17 @@ class PuzzleGame {
             timerInterval: null,
             startTime: null,
             isGameActive: false,
-            previewVisible: false
+            isPreviewVisible: false
         };
 
-        // Делаем availableTiles принимающим перетаскиваемые элементы
+        // Настраиваем перетаскивание в контейнер доступных тайлов
+        this.setupTilesContainer();
+        this.createGrid();
+        this.setupEventListeners();
+        this.startNewGame();
+    }
+
+    setupTilesContainer() {
         this.availableTiles.addEventListener('dragover', (e) => {
             e.preventDefault();
             this.availableTiles.classList.add('highlight');
@@ -73,10 +76,6 @@ class PuzzleGame {
                 this.state.draggedTile = null;
             }
         });
-
-        this.createGrid();
-        this.setupEventListeners();
-        this.startNewGame();
     }
 
 
@@ -123,7 +122,16 @@ class PuzzleGame {
     setupEventListeners() {
         this.newGameBtn.addEventListener('click', () => this.startNewGame());
         this.checkBtn.addEventListener('click', () => this.checkSolution());
-        this.togglePreviewBtn.addEventListener('click', () => this.togglePreview());
+
+        // Обработчик для кнопки подсказки
+        this.togglePreviewBtn.addEventListener('click', () => {
+            this.state.isPreviewVisible = !this.state.isPreviewVisible;
+            this.puzzleBackground.style.display = this.state.isPreviewVisible ? 'block' : 'none';
+
+            // Обновляем текст и стиль кнопки
+            this.togglePreviewBtn.textContent = this.state.isPreviewVisible ? 'Скрыть подсказку' : 'Показать подсказку';
+            this.togglePreviewBtn.classList.toggle('active', this.state.isPreviewVisible);
+        });
 
         this.difficultyBtns.forEach(btn => {
             btn.addEventListener('click', () => {
@@ -177,7 +185,12 @@ class PuzzleGame {
     updateBackgroundImage() {
         const imagePath = `/static/${this.state.currentDifficulty}puzzle.jpg`;
         this.puzzleBackground.style.backgroundImage = `url('${imagePath}')`;
-        this.previewImage.src = imagePath;
+
+        // Сбрасываем видимость подсказки при обновлении изображения
+        this.state.isPreviewVisible = false;
+        this.puzzleBackground.style.display = 'none';
+        this.togglePreviewBtn.textContent = 'Показать подсказку';
+        this.togglePreviewBtn.classList.remove('active');
     }
 
     createTiles(grid) {
