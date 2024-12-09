@@ -89,6 +89,7 @@ class PuzzleGame {
             const cell = document.createElement('div');
             cell.className = 'grid-cell';
             cell.dataset.index = i;
+            cell.classList.add('puzzle-cell')
 
             cell.addEventListener('dragover', e => {
                 e.preventDefault();
