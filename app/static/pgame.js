@@ -8,7 +8,6 @@ class PuzzleGame {
 
     initElements() {
         try {
-            // Получаем все необходимые DOM элементы
             this.puzzleGrid = document.getElementById('puzzleGrid');
             this.availableTiles = document.getElementById('availableTiles');
             this.puzzleBackground = document.getElementById('puzzleBackground');
@@ -18,7 +17,6 @@ class PuzzleGame {
             this.difficultyBtns = document.querySelectorAll('.difficulty-btn');
             this.togglePreviewBtn = document.getElementById('togglePreview');
 
-            // Проверяем наличие всех элементов
             if (!this.puzzleGrid || !this.availableTiles || !this.newGameBtn ||
                 !this.checkBtn || !this.timerDisplay || !this.togglePreviewBtn ||
                 !this.puzzleBackground) {
@@ -36,7 +34,9 @@ class PuzzleGame {
         this.config = {
             tileSize: 50,
             gridWidth: 9,
-            gridHeight: 6
+            gridHeight: 6,
+            totalWidth: 450, // 9 * 50px
+            totalHeight: 300 // 6 * 50px
         };
 
         this.state = {
@@ -50,7 +50,6 @@ class PuzzleGame {
             isPreviewVisible: false
         };
 
-        // Настраиваем перетаскивание в контейнер доступных тайлов
         this.setupTilesContainer();
         this.createGrid();
         this.setupEventListeners();
@@ -150,9 +149,11 @@ class PuzzleGame {
 
 
     togglePreview() {
-        this.state.previewVisible = !this.state.previewVisible;
-        this.previewSection.style.display = this.state.previewVisible ? 'block' : 'none';
-        this.togglePreviewBtn.textContent = this.state.previewVisible ? 'Скрыть картинку' : 'Показать картинку';
+        this.state.isPreviewVisible = !this.state.isPreviewVisible;
+        this.puzzleBackground.style.display = this.state.isPreviewVisible ? 'block' : 'none';
+
+        this.togglePreviewBtn.textContent = this.state.isPreviewVisible ? 'Скрыть подсказку' : 'Показать подсказку';
+        this.togglePreviewBtn.classList.toggle('active', this.state.isPreviewVisible);
     }
 
 
@@ -184,6 +185,8 @@ class PuzzleGame {
 
     updateBackgroundImage() {
         const imagePath = `/static/${this.state.currentDifficulty}puzzle.jpg`;
+
+        // Обновляем фоновое изображение
         this.puzzleBackground.style.backgroundImage = `url('${imagePath}')`;
 
         // Сбрасываем видимость подсказки при обновлении изображения
@@ -194,37 +197,24 @@ class PuzzleGame {
     }
 
     createTiles(grid) {
-        const { tileSize, gridWidth } = this.config;
-
-        // Очищаем контейнеры
         this.availableTiles.innerHTML = '';
         this.state.gridCells.forEach(cell => cell.innerHTML = '');
         this.state.tiles = [];
 
-        // Создаем новые тайлы
         grid.forEach((position, index) => {
             const tile = document.createElement('div');
             tile.className = 'tile';
             tile.draggable = true;
 
-            const originalX = (position % gridWidth) * tileSize;
-            const originalY = Math.floor(position / gridWidth) * tileSize;
+            const originalX = (position % this.config.gridWidth) * this.config.tileSize;
+            const originalY = Math.floor(position / this.config.gridWidth) * this.config.tileSize;
 
+            // Устанавливаем правильную позицию фона для каждой плитки
             tile.style.backgroundImage = `url('/static/${this.state.currentDifficulty}puzzle.jpg')`;
             tile.style.backgroundPosition = `-${originalX}px -${originalY}px`;
             tile.dataset.correctPosition = position;
 
-            tile.addEventListener('dragstart', () => {
-                this.state.draggedTile = tile;
-                tile.classList.add('dragging');
-            });
-
-            tile.addEventListener('dragend', () => {
-                tile.classList.remove('dragging');
-                if (!tile.parentElement || tile.parentElement === this.availableTiles) {
-                    this.state.draggedTile = null;
-                }
-            });
+            this.setupTileEventListeners(tile);
 
             this.state.tiles.push(tile);
             this.availableTiles.appendChild(tile);
@@ -299,6 +289,18 @@ class PuzzleGame {
             console.error('Ошибка при проверке решения:', error);
             alert('Произошла ошибка при проверке решения. Пожалуйста, попробуйте еще раз.');
         }
+    }
+
+    setupTileEventListeners(tile) {
+        tile.addEventListener('dragstart', () => {
+            this.state.draggedTile = tile;
+            tile.classList.add('dragging');
+        });
+
+        tile.addEventListener('dragend', () => {
+            tile.classList.remove('dragging');
+            this.state.draggedTile = null;
+        });
     }
 }
 
