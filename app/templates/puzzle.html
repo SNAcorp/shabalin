@@ -179,6 +179,25 @@
 <body>
     <div class="header">
         <h1>Собери пазл</h1>
+        <div class="difficulty-selector">
+            <div class="difficulty-card" data-difficulty="easy">
+                <img src="https://shabalin.sna.lol/static/epuzzle.jpg" alt="Легкий уровень">
+                <h3>Легкий</h3>
+                <p>Простой пейзаж с четкими элементами</p>
+            </div>
+            <div class="difficulty-card" data-difficulty="medium">
+                <img src="https://shabalin.sna.lol/static/puzzle.jpg" alt="Средний уровень">
+                <h3>Средний</h3>
+                <p>Городской пейзаж со множеством деталей</p>
+            </div>
+            <div class="difficulty-card" data-difficulty="hard">
+                <img src="https://shabalin.sna.lol/static/hpuzzle.jpg" alt="Сложный уровень">
+                <h3>Сложный</h3>
+                <p>Абстрактное изображение с похожими элементами</p>
+            </div>
+        </div>
+
+        <div class="timer" id="timer">00:00</div>
         <div class="controls">
             <button id="newGame">Новая игра</button>
             <button id="checkSolution">Проверить решение</button>
