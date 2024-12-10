@@ -9,7 +9,7 @@ class MinesweeperEvents {
 class Minesweeper {
     constructor() {
         this.BOARD_SIZE = 12;
-        this.MINES_COUNT = 20;
+        this.MINES_COUNT = 1;
         this.board = [];
         this.revealed = new Set();
         this.flagged = new Set();
@@ -79,14 +79,10 @@ class Minesweeper {
 
     initializeCustomEventHandlers() {
         document.addEventListener(MinesweeperEvents.START, (e) => {
-            console.log('Game started');
             this.startTimer();
         });
 
         document.addEventListener(MinesweeperEvents.STEP, (e) => {
-            const { x, y, value } = e.detail;
-            console.log(`Step at (${x}, ${y}) with value ${value}`);
-
             if (value === -1) {
                 this.handleGameOver(false);
             } else {
@@ -96,15 +92,12 @@ class Minesweeper {
 
         document.addEventListener(MinesweeperEvents.END, (e) => {
             const { won, time } = e.detail;
-            console.log(`Game ended. Won: ${won}, Time: ${time}s`);
             this.saveStats(won);
             this.stopTimer();
             this.showGameOver(won);
         });
 
         document.addEventListener(MinesweeperEvents.FLAG, (e) => {
-            const { x, y, flagged } = e.detail;
-            console.log(`Flag ${flagged ? 'placed' : 'removed'} at (${x}, ${y})`);
             this.updateMinesCount();
         });
 
@@ -468,7 +461,7 @@ class Minesweeper {
 
             localStorage.setItem('minesweeperStats', JSON.stringify(stats));
         } catch (error) {
-            console.error('Ошибка при сохранении статистики:', error);
+            return true;
         }
     }
 
@@ -522,8 +515,8 @@ class Minesweeper {
                 this.statsModal.classList.add('active');
             });
         } catch (error) {
-            console.error('Ошибка при загрузке статистики:', error);
             content.innerHTML = '<p>Ошибка при загрузке статистики</p>';
+            return true;
         }
     }
 
@@ -539,7 +532,6 @@ class Minesweeper {
 document.addEventListener('DOMContentLoaded', () => {
     const game = new Minesweeper();
 
-    // Примеры использования пользовательских событий
     document.addEventListener(MinesweeperEvents.START, (e) => {
         console.log('Новая игра началась!');
     });

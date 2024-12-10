@@ -1,22 +1,22 @@
 services:
   web:
     build: .
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.shabalin.rule=Host(`shabalin.sna.lol`)"
-      - "traefik.http.routers.shabalin.entrypoints=websecure"
-      - "traefik.http.routers.shabalin.tls.certresolver=myresolver"
-      - "traefik.http.routers.shabalin.priority=10"
-    networks:
-      - traefik_network
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.http.routers.shabalin.rule=Host(`shabalin.sna.lol`)"
+#      - "traefik.http.routers.shabalin.entrypoints=websecure"
+#      - "traefik.http.routers.shabalin.tls.certresolver=myresolver"
+#      - "traefik.http.routers.shabalin.priority=10"
+#    networks:
+#      - traefik_network
     expose:
       - "80"
-#    ports:
-#      - "80:80"
+    ports:
+      - "80:80"
     volumes:
       - .:/app
     command: uvicorn app.main:app --host 0.0.0.0 --port 80 --reload
 
-networks:
-  traefik_network:
-    external: true
+#networks:
+#  traefik_network:
+#    external: true
